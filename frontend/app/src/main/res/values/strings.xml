@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">khl_app</string>
+    <string name="login">Login:</string>
+    <string name="password">Password</string>
 </resources>

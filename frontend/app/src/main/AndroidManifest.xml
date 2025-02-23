@@ -11,6 +11,28 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Khl_app"
-        tools:targetApi="31" />
+        tools:targetApi="35">
+        <activity
+            android:name=".ui.TrackableActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.UserPageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.LoginActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
 
 </manifest>
