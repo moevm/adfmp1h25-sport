@@ -37,7 +37,7 @@ def login():
     if user_id:
         return jsonify(create_tokens(create_identity(user_id))), 201
 
-    return jsonify({'message': 'User with this login already exists'}), 409
+    return jsonify({'message': 'Wrong login or password'}), 401
 
 
 @auth.route('/refresh', methods=['POST'])
