@@ -22,6 +22,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var passwordInput: EditText
     private lateinit var loginBtn: Button
     private lateinit var errorMessage: TextView
+    private lateinit var registrationBtn: TextView
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,6 +38,7 @@ class LoginActivity : AppCompatActivity() {
         passwordInput = findViewById(R.id.password)
         loginBtn = findViewById(R.id.login_btn)
         errorMessage = findViewById(R.id.errorMessage)
+        registrationBtn = findViewById(R.id.registration_btn)
 
         loginBtn.setOnClickListener {
             val username = usernameInput.text.toString()
@@ -44,8 +46,12 @@ class LoginActivity : AppCompatActivity() {
             if (username.isNotEmpty() && password.isNotEmpty()) {
                 login(username, password)
             } else {
-                Toast.makeText(this, "Please enter both login and password", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please enter both login and password", Toast.LENGTH_SHORT)
+                    .show()
             }
+        }
+        registrationBtn.setOnClickListener {
+            startActivity(Intent(this@LoginActivity, MainActivity::class.java)) // TODO switch to registration activity
         }
     }
 
@@ -55,12 +61,11 @@ class LoginActivity : AppCompatActivity() {
             override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                 if (response.isSuccessful) {
                     val loginResponse = response.body()
-                    if (loginResponse?.success == true) {
-                        startActivity(Intent(this@LoginActivity, MainActivity::class.java))
-                        finish()
-                    } else {
-                        onErrorOccured(loginResponse?.message ?: "Unknown error")
-                    }
+                    val sharedPreferences = getSharedPreferences("tokens", MODE_PRIVATE)
+                    sharedPreferences.edit().putString("access_token", loginResponse?.accessToken).apply()
+                    sharedPreferences.edit().putString("refresh_token", loginResponse?.refreshToken).apply()
+                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                    finish()
                 } else {
                     onErrorOccured("Failed to login")
                 }
