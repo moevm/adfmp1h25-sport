@@ -42,7 +42,6 @@ def get_events():
         if params:
             query_string = urlencode(params, safe='[]', doseq=True)
             url = f"{url}?{query_string}"
-            print(params)
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
