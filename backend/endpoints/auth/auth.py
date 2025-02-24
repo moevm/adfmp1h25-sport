@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token, jwt_re
 from endpoints.auth.datasource import register_user, find_user
 from endpoints.auth.model import AuthData
 
-auth = Blueprint('auth', __name__)
+auth_bp = Blueprint('auth', __name__)
 
 
 def create_tokens(identity: str) -> dict:
@@ -20,7 +20,7 @@ def create_identity(user_id: str) -> str:
     return str({'id': user_id})
 
 
-@auth.route('/login', methods=['POST'])
+@auth_bp.route('/login', methods=['POST'])
 def login():
     if not request.is_json:
         return jsonify({'message': 'Content-Type must be application/json'}), 415
@@ -40,7 +40,7 @@ def login():
     return jsonify({'message': 'Wrong login or password'}), 401
 
 
-@auth.route('/refresh', methods=['POST'])
+@auth_bp.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
 def refresh():
     identity = get_jwt_identity()
@@ -48,7 +48,7 @@ def refresh():
     return jsonify(create_tokens(identity)), 200
 
 
-@auth.route('/register', methods=['POST'])
+@auth_bp.route('/register', methods=['POST'])
 def register():
     if not request.is_json:
         return jsonify({'message': 'Content-Type must be application/json'}), 415

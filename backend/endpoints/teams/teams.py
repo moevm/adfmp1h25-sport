@@ -7,17 +7,17 @@ from flask_jwt_extended import jwt_required
 from endpoints.teams.model import EventData
 from services.get_env import KHL_URL
 
-teams = Blueprint('teams', __name__)
+teams_bp = Blueprint('teams', __name__)
 
 
-@teams.route('/get_teams', methods=['GET'])
+@teams_bp.route('/get_teams', methods=['GET'])
 @jwt_required()
 def get_teams():
     response = requests.get(f'{KHL_URL}/teams_v2.json')
     return jsonify(response.json()), response.status_code
 
 
-@teams.route('/get_events', methods=['GET'])
+@teams_bp.route('/get_events', methods=['GET'])
 @jwt_required()
 def get_events():
     start_time = request.args.get('start_time')

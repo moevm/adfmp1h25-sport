@@ -7,3 +7,4 @@ MONGO_CLIENT = MongoClient(connection_string)
 
 USERS_ENTRY_CL = MONGO_CLIENT["Users"]["Entry"]
 USERS_PREDICTS = MONGO_CLIENT["Users"]["Predicts"]
+USERS_FOLLOWERS = MONGO_CLIENT["Users"]["Followers"]
