@@ -1,7 +1,6 @@
 import threading
 import time
 from datetime import timedelta
-
 import schedule
 from flask import Flask
 from flask_jwt_extended import JWTManager
