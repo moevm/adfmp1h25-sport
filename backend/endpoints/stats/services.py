@@ -1,3 +1,5 @@
+from bson import ObjectId
+
 from endpoints.stats.model import UserStats
 from services.mongo import USERS_STATS, USERS_ENTRY_CL
 
@@ -52,3 +54,14 @@ def get_users_stats(users_ids):
                 'points': points
             })
     return res
+
+
+def update_stats(user_id, inc_predicted_games, inc_winner_points, inc_score_points):
+    USERS_STATS.update_one(
+        {'_id': ObjectId(user_id)},
+        {'$inc': {
+            'predicted_games': inc_predicted_games,
+            'winner_points': inc_winner_points,
+            'score_points': inc_score_points
+        }}
+    )

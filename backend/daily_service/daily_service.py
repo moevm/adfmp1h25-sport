@@ -1,58 +1,41 @@
-import schedule
-import time
 from datetime import datetime
-import logging
 
-# Настройка логирования
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('service.log'),
-        logging.StreamHandler()
-    ]
-)
+from daily_service.service import get_timestamps, group_events_by_date, check_prediction
+from endpoints.stats.services import update_stats
+from endpoints.teams.service import get_events_service
+from services.mongo import USERS_PREDICTS_FOR_DAILY_SERVICE
 
 
-class DailyService:
-    def __init__(self):
-        self.logger = logging.getLogger(__name__)
+def daily_service():
+    timestamps = get_timestamps()
+    events = get_events_service(start_time=timestamps[0], end_time=int(datetime.now().timestamp()))
+    events_by_date = group_events_by_date(events)
+    predicts = list(USERS_PREDICTS_FOR_DAILY_SERVICE.find({"day": {"$in": timestamps}}))
 
-    def run_daily_task(self):
-        try:
-            self.logger.info("Начало выполнения ежедневной задачи")
+    for predict in predicts:
+        day = str(predict['day'])
+        if day not in events_by_date:
+            continue
 
-            # Здесь ваша логика
-            self._process_task()
+        for event_id, user_predictions in predict['events'].items():
+            event_id = str(event_id)
+            matched_event = None
+            for event_data in events_by_date.get(str(day), []):
+                if str(event_data['event']) == event_id:
+                    matched_event = event_data
+                    break
 
-            self.logger.info("Задача успешно выполнена")
-        except Exception as e:
-            self.logger.error(f"Ошибка при выполнении задачи: {str(e)}")
+            if not matched_event:
+                continue
 
-    def _process_task(self):
-        """
-        Основная логика вашего сервиса
-        """
-        # Пример:
-        self.logger.info("Выполняется обработка...")
-        # Ваш код здесь
+            actual_score = matched_event['score']
 
+            for user_id, predicted_score in user_predictions.items():
+                winner_guessed, score_accuracy = check_prediction(predicted_score, actual_score)
 
-def main():
-    service = DailyService()
-
-    # Настройка расписания (например, запуск каждый день в 00:00)
-    schedule.every().day.at("00:00").do(service.run_daily_task)
-
-    logging.info("Сервис запущен")
-
-    while True:
-        schedule.run_pending()
-        time.sleep(60)  # Проверка каждую минуту
-
-
-if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        logging.info("Сервис остановлен")
+                update_stats(
+                    user_id,
+                    inc_predicted_games=1,
+                    inc_winner_points=winner_guessed,
+                    inc_score_points=score_accuracy
+                )

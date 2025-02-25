@@ -9,7 +9,7 @@ from endpoints.predict.pipelines import get_predicts_pipeline
 from endpoints.teams.model import EventData
 from services.decorators import get_user_id, token_required
 from services.get_env import KHL_URL
-from services.mongo import USERS_PREDICTS
+from services.mongo import USERS_PREDICTS, USERS_PREDICTS_FOR_DAILY_SERVICE
 
 predict_bp = Blueprint('predict', __name__)
 
@@ -47,6 +47,23 @@ def make_predict(id):
         )
     else:
         return {"message": "cant find users predicts"}, 404
+
+    new_doc = USERS_PREDICTS_FOR_DAILY_SERVICE.find_one({"day": event.start_at_day})
+    if new_doc:
+        USERS_PREDICTS_FOR_DAILY_SERVICE.update_one(
+            {"day": event.start_at_day},
+            {"$set": {f"events.{event_id}.{id}": score}}
+        )
+    else:
+        doc = {
+            "day": event.start_at_day,
+            "events": {
+                event_id: {
+                    id: score
+                }
+            }
+        }
+        USERS_PREDICTS_FOR_DAILY_SERVICE.insert_one(doc)
 
     return "ok", 200
 

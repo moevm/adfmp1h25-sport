@@ -1,6 +1,8 @@
 from datetime import timedelta
 from flask import Flask
 from flask_jwt_extended import JWTManager
+
+from daily_service.daily_service import daily_service
 from endpoints.auth.auth import auth_bp
 from endpoints.followers.followers import followers_bp
 from endpoints.predict.predict import predict_bp
@@ -31,4 +33,5 @@ def home():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=PORT, debug=True)
+    print(daily_service())
+    app.run(host='0.0.0.0', port=PORT, debug=False)
