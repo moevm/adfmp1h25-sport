@@ -40,12 +40,12 @@ def home():
 def run_scheduler():
     while True:
         schedule.run_pending()
-        time.sleep(60)
+        time.sleep(10)
 
 
 if __name__ == '__main__':
     logging.error(datetime.datetime.now())
-    schedule.every().day.at("02:05").do(daily_service)
+    schedule.every().day.at("02:10").do(daily_service)
     scheduler_thread = threading.Thread(target=run_scheduler)
     scheduler_thread.daemon = True
     scheduler_thread.start()

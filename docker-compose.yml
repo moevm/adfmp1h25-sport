@@ -10,7 +10,7 @@ services:
       - "6969:6969"
     environment:
       - TZ=Europe/Moscow
-      - LAST_TIME='/last_time.txt'
+      - LAST_TIME=/last_time.txt
     volumes:
       - ./last_time.txt:/last_time.txt
     
