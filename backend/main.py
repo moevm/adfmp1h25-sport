@@ -1,3 +1,5 @@
+import datetime
+import logging
 import threading
 import time
 from datetime import timedelta
@@ -42,6 +44,7 @@ def run_scheduler():
 
 
 if __name__ == '__main__':
+    logging.error(datetime.datetime.now())
     schedule.every().day.at("02:05").do(daily_service)
     scheduler_thread = threading.Thread(target=run_scheduler)
     scheduler_thread.daemon = True
