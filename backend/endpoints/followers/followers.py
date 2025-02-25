@@ -1,9 +1,8 @@
 from bson import ObjectId
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required
-
+from endpoints.stats.services import get_user_level, get_users_stats
 from services.decorators import get_user_id
-from services.mongo import USERS_FOLLOWERS, USERS_ENTRY_CL
+from services.mongo import USERS_FOLLOWERS, USERS_ENTRY_CL, USERS_STATS
 
 followers_bp = Blueprint('followers', __name__)
 
@@ -13,7 +12,10 @@ followers_bp = Blueprint('followers', __name__)
 def get_followers(user_id):
     followers = USERS_FOLLOWERS.find_one({"_id": ObjectId(user_id)})
     if followers:
-        return followers["followers"]
+        users_ids = [ObjectId(temp_user_id) for temp_user_id in followers["followers"]]
+        users_ids.append(ObjectId(user_id))
+        res = get_users_stats(users_ids)
+        return res
     return {"message": "cant find users followers"}, 404
 
 

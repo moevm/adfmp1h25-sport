@@ -4,6 +4,7 @@ from flask_jwt_extended import JWTManager
 from endpoints.auth.auth import auth_bp
 from endpoints.followers.followers import followers_bp
 from endpoints.predict.predict import predict_bp
+from endpoints.stats.stats import stats_bp
 from endpoints.teams.teams import teams_bp
 from services.get_env import PORT, JWT_KEY
 
@@ -21,6 +22,7 @@ app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(teams_bp, url_prefix='/teams')
 app.register_blueprint(predict_bp, url_prefix='/predict')
 app.register_blueprint(followers_bp, url_prefix='/followers')
+app.register_blueprint(stats_bp, url_prefix='/stats')
 
 
 @app.route('/is_ok')
