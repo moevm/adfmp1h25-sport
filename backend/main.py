@@ -42,7 +42,7 @@ def run_scheduler():
 
 
 if __name__ == '__main__':
-    schedule.every().day.at("00:53").do(daily_service)
+    schedule.every().day.at("20:05").do(daily_service)
     scheduler_thread = threading.Thread(target=run_scheduler)
     scheduler_thread.daemon = True
     scheduler_thread.start()
