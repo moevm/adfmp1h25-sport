@@ -1,4 +1,8 @@
+import threading
+import time
 from datetime import timedelta
+
+import schedule
 from flask import Flask
 from flask_jwt_extended import JWTManager
 
@@ -32,6 +36,16 @@ def home():
     return "Server is running"
 
 
+def run_scheduler():
+    while True:
+        schedule.run_pending()
+        time.sleep(60)
+
+
 if __name__ == '__main__':
-    print(daily_service())
+    schedule.every().day.at("00:53").do(daily_service)
+    scheduler_thread = threading.Thread(target=run_scheduler)
+    scheduler_thread.daemon = True
+    scheduler_thread.start()
+
     app.run(host='0.0.0.0', port=PORT, debug=False)

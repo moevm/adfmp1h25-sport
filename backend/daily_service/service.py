@@ -28,7 +28,7 @@ def get_timestamps():
         timestamps.append(int(temp_date.timestamp()))
         temp_date += timedelta(days=1)
 
-    return timestamps
+    return timestamps, last_date
 
 
 def update_last_time(new_time):

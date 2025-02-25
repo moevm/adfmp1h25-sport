@@ -1,13 +1,15 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from daily_service.service import get_timestamps, group_events_by_date, check_prediction
+from daily_service.service import get_timestamps, group_events_by_date, check_prediction, update_last_time
 from endpoints.stats.services import update_stats
 from endpoints.teams.service import get_events_service
 from services.mongo import USERS_PREDICTS_FOR_DAILY_SERVICE
 
 
 def daily_service():
-    timestamps = get_timestamps()
+    timestamps, last_date = get_timestamps()
+    if len(timestamps) == 0:
+        return
     events = get_events_service(start_time=timestamps[0], end_time=int(datetime.now().timestamp()))
     events_by_date = group_events_by_date(events)
     predicts = list(USERS_PREDICTS_FOR_DAILY_SERVICE.find({"day": {"$in": timestamps}}))
@@ -39,3 +41,5 @@ def daily_service():
                     inc_winner_points=winner_guessed,
                     inc_score_points=score_accuracy
                 )
+
+    update_last_time(last_date + timedelta(days=1))
