@@ -1,0 +1,15 @@
+version: '3.3'
+
+services:
+      
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "6969:6969"
+    environment:
+      - LAST_TIME='/last_time.txt'
+    volumes:
+      - ./last_time.txt:/last_time.txt
+    
