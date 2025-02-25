@@ -12,5 +12,5 @@ services:
       - TZ=Europe/Moscow
       - LAST_TIME=/last_time.txt
     volumes:
-      - ./last_time.txt:/last_time.txt
+      - ./backend/last_time.txt:/last_time.txt
     
