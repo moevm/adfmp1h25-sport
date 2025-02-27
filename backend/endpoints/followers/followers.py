@@ -31,17 +31,19 @@ def subscribe(user_id):
     followers = USERS_FOLLOWERS.find_one({"_id": ObjectId(user_id)})
     if followers:
         followers_arr = followers["followers"]
-        followers_arr.append(for_whom_subscribe)
-        USERS_FOLLOWERS.update_one(
-            {"_id": ObjectId(user_id)},
-            {
-                "$set": {
-                    "followers": followers_arr
+        if for_whom_subscribe in followers_arr:
+            followers_arr.append(for_whom_subscribe)
+            USERS_FOLLOWERS.update_one(
+                {"_id": ObjectId(user_id)},
+                {
+                    "$set": {
+                        "followers": followers_arr
+                    }
                 }
-            }
-        )
-        update_follows(user_id, for_whom_subscribe, subscribe=True)
-        return "ok"
+            )
+            update_follows(user_id, for_whom_subscribe, subscribe=True)
+            return "ok"
+        return {"message": "already subscribed to this user"}, 400
     return {"message": "cant find users followers"}, 404
 
 
@@ -53,7 +55,7 @@ def unsubscribe(user_id):
 
     if followers:
         followers_arr = followers["followers"]
-        if from_whom_unsubscribe in followers_arr:
+        if from_whom_unsubscribe not in followers_arr:
             followers_arr.remove(from_whom_unsubscribe)
 
             USERS_FOLLOWERS.update_one(
