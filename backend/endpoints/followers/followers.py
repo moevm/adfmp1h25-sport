@@ -1,6 +1,6 @@
 from bson import ObjectId
 from flask import Blueprint, jsonify, request
-from endpoints.stats.services import get_user_level, get_users_stats
+from endpoints.stats.services import get_user_level, get_users_stats, update_follows
 from services.decorators import get_user_id
 from services.mongo import USERS_FOLLOWERS, USERS_ENTRY_CL, USERS_STATS
 
@@ -40,6 +40,7 @@ def subscribe(user_id):
                 }
             }
         )
+        update_follows(user_id, for_whom_subscribe, subscribe=True)
         return "ok"
     return {"message": "cant find users followers"}, 404
 
@@ -63,6 +64,7 @@ def unsubscribe(user_id):
                     }
                 }
             )
+            update_follows(user_id, from_whom_unsubscribe, subscribe=False)
             return "ok"
         return {"message": "not subscribed to this user"}, 400
     return {"message": "cant find users followers"}, 404

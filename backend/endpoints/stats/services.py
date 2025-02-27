@@ -65,3 +65,18 @@ def update_stats(user_id, inc_predicted_games, inc_winner_points, inc_score_poin
             'score_points': inc_score_points
         }}
     )
+
+def update_follows(user_id, follow_id, subscribe=True):
+    increment_value = 1 if subscribe else -1
+    USERS_STATS.update_one(
+        {'_id': ObjectId(user_id)},
+        {'$inc': {
+            'following_count': increment_value
+        }}
+    )
+    USERS_STATS.update_one(
+        {'_id': ObjectId(follow_id)},
+        {'$inc': {
+            'followers_count': increment_value
+        }}
+    )
