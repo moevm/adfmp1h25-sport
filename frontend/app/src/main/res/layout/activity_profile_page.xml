@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/login_background"
+        android:orientation="vertical"
+        android:padding="16dp"
+        tools:context=".ui.MainActivity">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:id="@+id/mainLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/topBarLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/menuButton"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="0"
+                        android:backgroundTint="#00FFFFFF"
+                        app:srcCompat="@drawable/icon_menu" />
+
+                    <TextView
+                        android:id="@+id/my_profile_txt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:fontFamily="sans-serif"
+                        android:text="Мой профиль"
+                        android:textAlignment="center"
+                        android:textColor="#FFFFFF"
+                        android:textSize="34sp"
+                        android:typeface="normal" />
+
+                    <ImageButton
+                        android:id="@+id/imageButton2"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="0"
+                        android:background="#00FFFFFF"
+                        app:srcCompat="@drawable/icon_settings" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/profileInfoLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:id="@+id/avatarLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:id="@+id/avatar"
+                            android:layout_width="170dp"
+                            android:layout_height="170dp"
+                            android:layout_marginTop="16dp"
+                            android:adjustViewBounds="false"
+                            android:background="@drawable/circle_background"
+                            android:clickable="true"
+                            android:cropToPadding="false"
+                            android:focusable="true"
+                            android:scaleType="centerInside"
+                            tools:srcCompat="@tools:sample/avatars" />
+
+                        <TextView
+                            android:id="@+id/profileName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="0"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:paddingTop="8dp"
+                            android:text="  login"
+                            android:textAlignment="center"
+                            android:textColor="#EBEBEB"
+                            android:textSize="24sp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/profileButtonsLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:id="@+id/scoreLayout"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="0.5"
+                            android:orientation="vertical">
+
+                            <ImageButton
+                                android:id="@+id/forecastBtn"
+                                android:layout_width="match_parent"
+                                android:layout_height="70dp"
+                                android:layout_weight="0"
+                                android:background="#00FFFFFF"
+                                android:scaleType="fitCenter"
+                                app:srcCompat="@android:drawable/ic_dialog_map" />
+
+                            <TextView
+                                android:id="@+id/scoreText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:clickable="true"
+                                android:fontFamily="sans-serif"
+                                android:text="Прогнозы"
+                                android:textAlignment="center"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:typeface="normal" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/subscribeBtnLayout"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="0.5"
+                            android:orientation="vertical">
+
+                            <ImageButton
+                                android:id="@+id/subscribeBtn"
+                                android:layout_width="match_parent"
+                                android:layout_height="70dp"
+                                android:layout_weight="0"
+                                android:background="#00FFFFFF"
+                                android:scaleType="fitCenter"
+                                app:srcCompat="@android:drawable/stat_notify_more" />
+
+                            <TextView
+                                android:id="@+id/subscribeText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:clickable="true"
+                                android:text="Следить"
+                                android:textAlignment="center"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/pureInfoLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:id="@+id/levelLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginVertical="16dp"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginLeft="16dp"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:layout_marginRight="16dp"
+                            android:layout_marginBottom="16dp"
+                            android:layout_weight="0"
+                            android:background="@drawable/level_rounded_bg"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/levelNum"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:fontFamily="sans-serif"
+                                android:text="3"
+                                android:textAlignment="center"
+                                android:textColor="#F4F4F4"
+                                android:textSize="60sp" />
+
+                            <TextView
+                                android:id="@+id/levelText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="16dp"
+                                android:layout_weight="0"
+                                android:clickable="true"
+                                android:fontFamily="sans-serif"
+                                android:text="Уровень"
+                                android:textAlignment="center"
+                                android:textColor="#FFFFFF"
+                                android:textSize="34sp"
+                                android:typeface="normal" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/scoreLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginTop="16dp"
+                            android:layout_weight="0"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/scoreNum"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:fontFamily="sans-serif"
+                                android:text="1337"
+                                android:textAlignment="center"
+                                android:textColor="#F4F4F4"
+                                android:textSize="48sp" />
+
+                            <TextView
+                                android:id="@+id/scoreText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:clickable="true"
+                                android:fontFamily="sans-serif"
+                                android:text="Баллов получено"
+                                android:textAlignment="center"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:typeface="normal" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/forecastedLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginTop="16dp"
+                            android:layout_weight="0"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/forecastedNum"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:fontFamily="sans-serif"
+                                android:text="100"
+                                android:textAlignment="center"
+                                android:textColor="#F4F4F4"
+                                android:textSize="48sp" />
+
+                            <TextView
+                                android:id="@+id/forecastedText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:clickable="true"
+                                android:fontFamily="sans-serif"
+                                android:text="Предсказано игр"
+                                android:textAlignment="center"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:typeface="normal" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/winnerForecastPercentageLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginTop="16dp"
+                            android:layout_weight="0"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/winnerForecastPercentageNum"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:fontFamily="sans-serif"
+                                android:text="52%"
+                                android:textAlignment="center"
+                                android:textColor="#F4F4F4"
+                                android:textSize="48sp" />
+
+                            <TextView
+                                android:id="@+id/winnerForcastedText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:clickable="true"
+                                android:fontFamily="sans-serif"
+                                android:text="Верно угадан победитель"
+                                android:textAlignment="center"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:typeface="normal" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/scorePercentageLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginTop="16dp"
+                            android:layout_weight="0"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/scorePercentageNum"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:fontFamily="sans-serif"
+                                android:text="27%"
+                                android:textAlignment="center"
+                                android:textColor="#F4F4F4"
+                                android:textSize="48sp" />
+
+                            <TextView
+                                android:id="@+id/scorePercentageText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:clickable="true"
+                                android:fontFamily="sans-serif"
+                                android:text="Верность счета"
+                                android:textAlignment="center"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:typeface="normal" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/followersLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginTop="16dp"
+                            android:layout_weight="0"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/followersNum"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:fontFamily="sans-serif"
+                                android:text="10"
+                                android:textAlignment="center"
+                                android:textColor="#F4F4F4"
+                                android:textSize="48sp" />
+
+                            <TextView
+                                android:id="@+id/followersText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:clickable="true"
+                                android:fontFamily="sans-serif"
+                                android:text="Отслеживают"
+                                android:textAlignment="center"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:typeface="normal" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/followingLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginTop="16dp"
+                            android:layout_weight="0"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/followingNum"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:fontFamily="sans-serif"
+                                android:text="8"
+                                android:textAlignment="center"
+                                android:textColor="#F4F4F4"
+                                android:textSize="48sp" />
+
+                            <TextView
+                                android:id="@+id/followingText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="0"
+                                android:clickable="true"
+                                android:fontFamily="sans-serif"
+                                android:text="Отслеживает"
+                                android:textAlignment="center"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:typeface="normal" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+
+    </RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
