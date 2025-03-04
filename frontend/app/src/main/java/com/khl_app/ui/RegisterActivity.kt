@@ -68,17 +68,17 @@ class RegisterActivity : AppCompatActivity() {
                     startActivity(Intent(this@RegisterActivity, MainActivity::class.java))
                     finish()
                 } else {
-                    onErrorOccured("Failed to register")
+                    onErrorOccurred("Failed to register")
                 }
             }
 
             override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                onErrorOccured("Error: ${t.message}")
+                onErrorOccurred("Error: ${t.message}")
             }
         })
     }
 
-    private fun onErrorOccured(errorText: String) {
+    private fun onErrorOccurred(errorText: String) {
         errorMessage.text = errorText
     }
 }
