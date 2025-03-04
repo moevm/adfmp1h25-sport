@@ -22,4 +22,5 @@ MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
 MONGO_HOST = get_env('MONGO_HOST')
 MONGO_PORT = get_env('MONGO_PORT')
 KHL_URL = get_env('KHL_URL')
+LAST_TIME = get_env('LAST_TIME')
 
