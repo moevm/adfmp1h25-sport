@@ -1,16 +1,15 @@
 package com.khl_app.domain.models
 
 import android.media.Image
-import java.util.UUID
 
 data class TeamResponse(
     val conference: String,
     val conferenceKey: ConferenceKey,
     val division: String,
     val divisionKey: String,
-    val id: UUID,
+    val id: String,
     val image: Image,
-    val khlID: UUID,
+    val khlID: String,
     val location: String,
     val name: String,
     )

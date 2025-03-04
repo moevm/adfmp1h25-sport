@@ -2,10 +2,9 @@ package com.khl_app.domain.models
 
 import java.security.Timestamp
 import java.util.Date
-import java.util.UUID
 
 data class EventResponse(
-    val id: UUID,
+    val id: String,
     val period: Long,
     val score: String,
     val startAt: Timestamp,
@@ -15,5 +14,5 @@ data class EventResponse(
 )
 
 data class Team (
-    val id: UUID,
+    val id: String,
 )
