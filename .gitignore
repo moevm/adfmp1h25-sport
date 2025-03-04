@@ -2,5 +2,7 @@
 
 .idea/
 venv/
+*.pyc
+.venv
 **/*.pyc
 **/last_time.txt

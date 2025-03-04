@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/login_background">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/calendar_button"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Календарь"
+        android:textAllCaps="false"
+        app:icon="@drawable/icon_calendar"
+        app:iconTint="@color/white"
+        android:textColor="@color/white"
+        android:textAlignment="textStart"
+        app:iconGravity="textStart"
+        android:textSize="16sp"
+        app:iconPadding="8dp"
+        style="?attr/materialButtonOutlinedStyle"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/tracked_button"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Отслеживаемые"
+        android:textAllCaps="false"
+        app:icon="@drawable/icon_people"
+        app:iconTint="@color/white"
+        android:textColor="@color/white"
+        android:textAlignment="textStart"
+        app:iconGravity="textStart"
+        android:textSize="16sp"
+        app:iconPadding="8dp"
+        style="?attr/materialButtonOutlinedStyle"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/profile_button"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Личная страница"
+        android:textAllCaps="false"
+        app:icon="@drawable/icon_account"
+        app:iconTint="@color/white"
+        android:textColor="@color/white"
+        android:textAlignment="textStart"
+        app:iconGravity="textStart"
+        android:textSize="16sp"
+        app:iconPadding="8dp"
+        style="?attr/materialButtonOutlinedStyle"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/logout_button"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Выход"
+        android:textAllCaps="false"
+        app:icon="@drawable/icon_exit"
+        app:iconTint="@color/white"
+        android:textColor="@color/white"
+        android:textAlignment="textStart"
+        app:iconGravity="textStart"
+        android:textSize="16sp"
+        app:iconPadding="8dp"
+        style="?attr/materialButtonOutlinedStyle"/>
+</LinearLayout>
