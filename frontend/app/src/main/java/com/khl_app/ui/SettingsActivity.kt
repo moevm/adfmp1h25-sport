@@ -3,6 +3,7 @@ package com.khl_app.ui
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.Composable
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.khl_app.R
@@ -18,4 +19,9 @@ class SettingsActivity : AppCompatActivity() {
             insets
         }
     }
+}
+
+@Composable
+fun SettingsScreen() {
+
 }
