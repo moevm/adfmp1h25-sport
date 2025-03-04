@@ -15,6 +15,9 @@ interface ApiService {
     @POST("auth/login")
     fun login(@Body credentials: Map<String, String>): Call<LoginResponse>
 
+    @POST("auth/register")
+    fun register(@Body credentials: Map<String, String>): Call<LoginResponse>
+
     @POST("auth/refresh")
     fun refresh(@Header("Authorization") token: String): Call<LoginResponse>
 
