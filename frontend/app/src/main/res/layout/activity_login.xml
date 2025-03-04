@@ -65,14 +65,14 @@
             android:text="Login"
             android:textColor="@color/white"
             android:textSize="20sp" />
+
         <TextView
+            android:id="@+id/registration_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Registeration"
-            android:textSize="16sp"
+            android:text="Registration"
             android:textColor="#40ffffff"
-            android:id="@+id/registration_btn"
-            />
+            android:textSize="16sp" />
 
         <TextView
             android:layout_width="wrap_content"

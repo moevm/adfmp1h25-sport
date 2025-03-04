@@ -17,18 +17,18 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class LoginActivity : AppCompatActivity() {
+class RegisterActivity : AppCompatActivity() {
     private lateinit var usernameInput: EditText
     private lateinit var passwordInput: EditText
-    private lateinit var loginBtn: Button
+    private lateinit var registerBtn: Button
     private lateinit var errorMessage: TextView
-    private lateinit var registrationBtn: TextView
+    private lateinit var backToLoginBtn: TextView
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_login)
+        setContentView(R.layout.activity_register)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -36,38 +36,39 @@ class LoginActivity : AppCompatActivity() {
         }
         usernameInput = findViewById(R.id.username)
         passwordInput = findViewById(R.id.password)
-        loginBtn = findViewById(R.id.login_btn)
+        registerBtn = findViewById(R.id.register_btn)
         errorMessage = findViewById(R.id.errorMessage)
-        registrationBtn = findViewById(R.id.registration_btn)
+        backToLoginBtn = findViewById(R.id.back_to_login_btn)
 
-        loginBtn.setOnClickListener {
+        registerBtn.setOnClickListener {
             val username = usernameInput.text.toString()
             val password = passwordInput.text.toString()
             if (username.isNotEmpty() && password.isNotEmpty()) {
-                login(username, password)
+                register(username, password)
             } else {
                 Toast.makeText(this, "Please enter both login and password", Toast.LENGTH_SHORT)
                     .show()
             }
         }
-        registrationBtn.setOnClickListener {
-            startActivity(Intent(this@LoginActivity, RegisterActivity::class.java)) // TODO switch to registration activity
+        backToLoginBtn.setOnClickListener {
+            startActivity(Intent(this@RegisterActivity, LoginActivity::class.java))
         }
     }
 
-    private fun login(username: String, password: String) {
+
+    private fun register(username: String, password: String) {
         val credentials = mapOf("login" to username, "password" to password)
-        ApiClient.apiService.login(credentials).enqueue(object : Callback<LoginResponse> {
+        ApiClient.apiService.register(credentials).enqueue(object : Callback<LoginResponse> {
             override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
                 if (response.isSuccessful) {
                     val loginResponse = response.body()
                     val sharedPreferences = getSharedPreferences("tokens", MODE_PRIVATE)
                     sharedPreferences.edit().putString("access_token", loginResponse?.accessToken).apply()
                     sharedPreferences.edit().putString("refresh_token", loginResponse?.refreshToken).apply()
-                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                    startActivity(Intent(this@RegisterActivity, MainActivity::class.java))
                     finish()
                 } else {
-                    onErrorOccured("Failed to login")
+                    onErrorOccured("Failed to register")
                 }
             }
 
