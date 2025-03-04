@@ -11,6 +11,7 @@ lifecycleViewmodelCompose = "2.8.7"
 material = "1.10.0"
 activity = "1.8.0"
 constraintlayout = "2.1.4"
+navigationCompose = "2.8.8"
 retrofit = "2.9.0"
 gson-converter = "2.9.0"
 navigationRuntimeKtx = "2.8.8"
@@ -24,6 +25,7 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 androidx-material3 = { module = "androidx.compose.material3:material3" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
