@@ -9,10 +9,10 @@ data class EventResponse(
     val score: String,
     val startAt: Timestamp,
     val startAtDay: Date,
-    val teamA: Team,
-    val teamB: Team,
+    val teamA: TeamId,
+    val teamB: TeamId,
 )
 
-data class Team (
+data class TeamId (
     val id: String,
 )

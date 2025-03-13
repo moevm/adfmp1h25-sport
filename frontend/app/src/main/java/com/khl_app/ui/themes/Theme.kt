@@ -33,11 +33,7 @@ private val LightColorPalette = lightColorScheme(
 
 @Composable
 fun KhlAppTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    val colors = if (!darkTheme) {
-        DarkColorPalette
-    } else {
-        LightColorPalette
-    }
+    val colors = DarkColorPalette
 
     MaterialTheme(
         colorScheme = colors,

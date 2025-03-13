@@ -13,35 +13,10 @@
         android:theme="@style/Theme.Khl_app"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".ui.TrackableActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.UserPageActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.SettingsActivity"
-            android:exported="false" />
-        <activity
             android:name=".ui.MainActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ui.LoginActivity"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".ui.RegisterActivity"
-            android:exported="true">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
