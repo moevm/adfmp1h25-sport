@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">khl_app</string>
-    <string name="login">Login:</string>
-    <string name="password">Password</string>
+    <string name="placeholder_login">login</string>
+    <string name="placeholder_password">password</string>
+    <string name="btn_registration">Registration</string>
+    <string name="btn_login">Login</string>
 </resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">khl_app</string>
+    <string name="placeholder_login">логин</string>
+    <string name="placeholder_password">пароль</string>
+    <string name="btn_registration">Регистрация</string>
+    <string name="btn_login">Логин</string>
+</resources>

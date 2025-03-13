@@ -1,6 +1,5 @@
 package com.khl_app.domain.models
 
-import android.media.Image
 
 data class TeamResponse(
     val conference: String,
@@ -8,7 +7,7 @@ data class TeamResponse(
     val division: String,
     val divisionKey: String,
     val id: String,
-    val image: Image,
+    val image: String,
     val khlID: String,
     val location: String,
     val name: String,

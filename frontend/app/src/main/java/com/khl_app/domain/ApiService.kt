@@ -3,38 +3,38 @@ package com.khl_app.domain
 import com.khl_app.domain.models.EventResponse
 import com.khl_app.domain.models.LoginResponse
 import com.khl_app.domain.models.TeamResponse
-import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
+import retrofit2.Response
 import java.util.UUID
 
 interface ApiService {
     @POST("auth/login")
-    fun login(@Body credentials: Map<String, String>): Call<LoginResponse>
+    suspend fun login(@Body credentials: Map<String, String>): Response<LoginResponse>
 
     @POST("auth/register")
-    fun register(@Body credentials: Map<String, String>): Call<LoginResponse>
+    suspend fun register(@Body credentials: Map<String, String>): Response<LoginResponse>
 
     @POST("auth/refresh")
-    fun refresh(@Header("Authorization") token: String): Call<LoginResponse>
+    suspend fun refresh(@Header("Authorization") token: String): Response<LoginResponse>
 
     @GET("teams/get_events")
-    fun getEvents(
+    suspend fun getEvents(
         @Query("start_time") start: Long?,
         @Query("end_time") end: Long?,
         @Query("teams") teams: List<String>
-    ): Call<List<EventResponse>>
+    ): Response<List<EventResponse>>
 
     @GET("teams/get_teams")
-    fun getTeams(): Call<List<TeamResponse>>
+    suspend fun getTeams(): Response<List<TeamResponse>>
 
     @GET("predict/get_predicts")
-    fun getPredictions(
+    suspend fun getPredictions(
         @Query("user_id") userId: String,
         @Query("start_time") start: Long?,
         @Query("end_time") end: Long?
-    ): Call<Map<String, Map<String, String>>>
+    ): Response<Map<String, Map<String, String>>>
 }
