@@ -51,7 +51,7 @@ def refresh():
 @auth_bp.route('/is_token_valid', methods=['GET'])
 @jwt_required()
 def is_valid():
-    return "ok"
+    return jsonify({"status": "ok"}), 200
 
 
 @auth_bp.route('/register', methods=['POST'])
