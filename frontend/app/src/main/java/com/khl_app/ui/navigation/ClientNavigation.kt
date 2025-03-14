@@ -5,11 +5,17 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.khl_app.ui.screens.client.MainScreen
+import com.khl_app.ui.screens.client.ProfileScreen
 
 fun NavGraphBuilder.clientNavigation(navHostController: NavHostController, viewModel: MainViewModel) {
     composable(
         route = Screen.MainScreen.route
     ) {
-        MainScreen(viewModel)
+        MainScreen(viewModel, navHostController)
+    }
+    composable(
+        route = Screen.ProfileScreen.route
+    ){
+        ProfileScreen(viewModel, navHostController)
     }
 }

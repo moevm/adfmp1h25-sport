@@ -22,14 +22,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.khl_app.domain.models.EventPredictionItem
+import com.khl_app.ui.navigation.Screen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun MainScreen(viewModel: MainViewModel) {
+fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
     val events by viewModel.events.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
@@ -136,7 +139,9 @@ fun MainScreen(viewModel: MainViewModel) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        TopBar()
+        TopBar(onMenuClick = {
+            navHostController.navigate(Screen.ProfileScreen.route)
+        })
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -367,15 +372,16 @@ fun NavigationButtons(
 }
 
 @Composable
-fun TopBar() {
+fun TopBar(onMenuClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(color = Color(0xFF1D1F2B))
             .padding(horizontal = 10.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        MenuButton()
+        MenuButton(onMenuClick = onMenuClick)
         CenterContent(
             modifier = Modifier
                 .weight(1f)
@@ -410,8 +416,8 @@ fun CenterContent(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun MenuButton() {
-    IconButton(onClick = { }) {
+fun MenuButton(onMenuClick: () -> Unit) {
+    IconButton(onClick = onMenuClick) {
         Icon(
             Icons.Rounded.Menu,
             contentDescription = "Menu Button",
