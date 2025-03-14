@@ -36,6 +36,24 @@ class MainViewModel(
         // Аналогично методу login
     }
 
+    // Add this to MainViewModel.kt
+    fun checkTokenValidity(onResult: (Boolean) -> Unit) {
+        authViewModel.checkTokenValidity { isValid ->
+            if (isValid) {
+                // If token is valid, fetch teams and events
+                teamViewModel.fetchAndSaveTeams { teamError ->
+                    if (teamError == null) {
+                        eventViewModel.loadEvents()
+                    }
+                    // Consider token valid even if teams failed to load
+                    onResult(true)
+                }
+            } else {
+                onResult(false)
+            }
+        }
+    }
+
     // Events delegating properties
     val events = eventViewModel.events
     val isLoading = eventViewModel.isLoading

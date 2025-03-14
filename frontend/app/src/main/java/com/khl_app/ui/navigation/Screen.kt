@@ -2,6 +2,7 @@ package com.khl_app.ui.navigation
 
 sealed class Screen(val route: String){
     companion object {
+        private const val ROUTER_SPLASH = "splash_screen"
         private const val ROUTER_REGISTRATION = "registration_screen"
         private const val ROUTER_LOGIN = "login_screen"
 
@@ -13,6 +14,7 @@ sealed class Screen(val route: String){
         private const val ROUTER_SETTINGS = "settings_screen"
     }
 
+    object SplashScreen: Screen(ROUTER_SPLASH)
     object LoginScreen: Screen(ROUTER_LOGIN)
     object RegistrationScreen: Screen(ROUTER_REGISTRATION)
     object AboutScreen: Screen(ROUTER_ABOUT)

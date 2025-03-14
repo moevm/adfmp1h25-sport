@@ -84,7 +84,7 @@ fun LoginScreen(
                     placeholder = {
                         Text(
                             text = "Логин",
-                            fontSize = 16.sp,
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Normal,
                             color = lightGrayText
                         )
@@ -98,7 +98,7 @@ fun LoginScreen(
                     },
                     singleLine = true,
                     textStyle = TextStyle(
-                        fontSize = 16.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Normal,
                         color = lightGrayText
                     ),
@@ -139,7 +139,7 @@ fun LoginScreen(
                     placeholder = {
                         Text(
                             text = "Пароль",
-                            fontSize = 16.sp,
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Normal,
                             color = lightGrayText
                         )
@@ -153,7 +153,7 @@ fun LoginScreen(
                     },
                     singleLine = true,
                     textStyle = TextStyle(
-                        fontSize = 16.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Normal,
                         color = lightGrayText
                     ),

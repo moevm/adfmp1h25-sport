@@ -23,6 +23,9 @@ interface ApiService {
     @POST("auth/refresh")
     suspend fun refresh(@Header("Authorization") token: String): Response<LoginResponse>
 
+    @GET("auth/is_token_valid")
+    suspend fun isTokenValid(@Header("Authorization") token: String): Response<Map<String, String>>
+
     @GET("teams/get_events")
     suspend fun getEvents(
         @Header("Authorization") token: String,
