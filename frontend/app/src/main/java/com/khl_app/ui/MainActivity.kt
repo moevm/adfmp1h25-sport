@@ -13,6 +13,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
@@ -35,7 +37,13 @@ import retrofit2.Response
 class MainActivity : ComponentActivity() {
     private val tokenCache = TokenPreferenceRepository(this)
     private val teamCache = TeamPreferenceRepository(this)
-    private val viewModel = MainViewModel(tokenCache, teamCache)
+    private val viewModel by viewModels<MainViewModel> {
+        object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return MainViewModel(applicationContext, tokenCache, teamCache) as T
+            }
+        }
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {

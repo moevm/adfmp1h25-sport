@@ -1,51 +1,70 @@
 package com.khl_app.ui.screens.client
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.khl_app.domain.models.EventPredictionItem
-import com.khl_app.domain.models.Team
-import com.khl_app.ui.themes.KhlAppTheme
 import com.khl_app.ui.view_models.MainViewModel
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
-    val logo =
-        "https://www.google.com/url?sa=i&url=https%3A%2F%2Fru.wikipedia.org%2Fwiki%2F%25D0%259A%25D0%25BE%25D0%25BD%25D1%2582%25D0%25B8%25D0%25BD%25D0%25B5%25D0%25BD%25D1%2582%25D0%25B0%25D0%25BB%25D1%258C%25D0%25BD%25D0%25B0%25D1%258F_%25D1%2585%25D0%25BE%25D0%25BA%25D0%25BA%25D0%25B5%25D0%25B9%25D0%25BD%25D0%25B0%25D1%258F_%25D0%25BB%25D0%25B8%25D0%25B3%25D0%25B0&psig=AOvVaw3QY7-Ugq1-vOP6aEvVVZAJ&ust=1741881808441000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCODT5cX1hIwDFQAAAAAdAAAAABAE"
+    val events by viewModel.events.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    val scope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
+
+    // Отслеживаем выбранную вкладку
+    var selectedTabIndex by remember { mutableStateOf(1) } // 0=Предыдущие, 1=Сегодня, 2=Будущие
+
+    // Проверяем, нужно ли загрузить больше данных при достижении конца списка
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex }
+            .collect { firstVisibleItem ->
+                if (firstVisibleItem == 0 && !isLoading) {
+                    // Мы в начале списка, загружаем более ранние события
+                    viewModel.loadMorePastEvents()
+                }
+            }
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val totalItems = listState.layoutInfo.totalItemsCount
+            lastVisibleItem >= totalItems - 1
+        }.collect { isAtEnd ->
+            if (isAtEnd && !isLoading && events.isNotEmpty()) {
+                // Мы в конце списка, загружаем более поздние события
+                viewModel.loadMoreFutureEvents()
+            }
+        }
+    }
+
+    // Загружаем события при первом отображении экрана
+    LaunchedEffect(Unit) {
+        if (events.isEmpty()) {
+            viewModel.loadEvents()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -55,35 +74,81 @@ fun MainScreen(viewModel: MainViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         TopBar()
+
         Spacer(modifier = Modifier.height(20.dp))
-        MatchList(listOf(
-            EventPredictionItem(
-                teamA = Team(logo, "teamA"),
-                teamB = Team(logo, "teamB"),
-                date = "25.02.2024",
-                time = "17:32",
-                prediction = "2:1",
-                result = "2:11"
-            ),
-            EventPredictionItem(
-                teamA = Team(logo, "teamA"),
-                teamB = Team(logo, "teamB"),
-                date = "24.02.2024",
-                time = "17:32",
-                prediction = null,
-                result = "2:11"
-            ),
-            EventPredictionItem(
-                teamA = Team(logo, "teamA"),
-                teamB = Team(logo, "teamB"),
-                date = "24.02.2024",
-                time = "17:32",
-                prediction = null,
-                result = "2:11"
+
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Tab(
+                selected = selectedTabIndex == 0,
+                onClick = { selectedTabIndex = 0 },
+                text = { Text("Предыдущие") }
             )
-        ))
+            Tab(
+                selected = selectedTabIndex == 1,
+                onClick = { selectedTabIndex = 1 },
+                text = { Text("Сегодня") }
+            )
+            Tab(
+                selected = selectedTabIndex == 2,
+                onClick = { selectedTabIndex = 2 },
+                text = { Text("Будущие") }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        if (isLoading && events.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (error != null && events.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = "Ошибка: $error",
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            // Фильтруем события в зависимости от выбранной вкладки
+            val today = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yy"))
+            val filteredEvents = when (selectedTabIndex) {
+                0 -> events.filter { it.date < today } // Предыдущие события
+                1 -> events.filter { it.date == today } // Сегодняшние события
+                2 -> events.filter { it.date > today } // Будущие события
+                else -> events
+            }
+
+            if (filteredEvents.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "Нет событий",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                MatchList(events = filteredEvents, listState = listState)
+            }
+
+            // Показываем индикатор загрузки внизу при загрузке дополнительных данных
+            if (isLoading && events.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                }
+            }
+        }
     }
 }
+
 
 @Composable
 fun TopBar() {
@@ -140,9 +205,7 @@ fun MenuButton() {
 
 @Composable
 fun SettingsButton() {
-    IconButton(onClick = {
-
-    }) {
+    IconButton(onClick = { }) {
         Icon(
             Icons.Rounded.Settings,
             contentDescription = "Settings Button",
@@ -153,10 +216,10 @@ fun SettingsButton() {
 }
 
 @Composable
-fun MatchList(events: List<EventPredictionItem>) {
-    var lastDate by remember { mutableStateOf("") }
+fun MatchList(events: List<EventPredictionItem>, listState: LazyListState) {
     val groupItems = events.groupBy { it.date }
-    LazyColumn {
+
+    LazyColumn(state = listState) {
         groupItems.forEach { (date, cards) ->
             item {
                 Box(
@@ -187,13 +250,5 @@ fun MatchList(events: List<EventPredictionItem>) {
                 PredictCardItem(card)
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MainPreview() {
-    KhlAppTheme {
-        MainScreen(viewModel())
     }
 }

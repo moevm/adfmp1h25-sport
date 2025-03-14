@@ -6,7 +6,7 @@ data class TeamData (
     val conferenceKey: String,
     val division: String,
     val divisionKey: String,
-    val id: String,
+    val id: Int,
     val image: String,
     val khlID: String,
     val location: String,

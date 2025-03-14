@@ -19,7 +19,7 @@ class TeamPreferenceRepository (
         context.dataStore.edit { pref ->
             pref[stringPreferencesKey("conference")] = info.conference
             pref[stringPreferencesKey("conference_key")] = info.conferenceKey
-            pref[stringPreferencesKey("id")] = info.id
+            pref[stringPreferencesKey("id")] = info.id.toString()
             pref[stringPreferencesKey("division")] = info.division
             pref[stringPreferencesKey("division_key")] = info.divisionKey
             pref[stringPreferencesKey("image")] = info.image
@@ -35,7 +35,7 @@ class TeamPreferenceRepository (
             pref[stringPreferencesKey("conference_key")] ?: "",
             pref[stringPreferencesKey("division")] ?: "",
             pref[stringPreferencesKey("division_key")] ?: "",
-            pref[stringPreferencesKey("id")] ?: "",
+            (pref[stringPreferencesKey("id")] ?: "").toIntOrNull() ?: 0,
             pref[stringPreferencesKey("image")] ?: "",
             pref[stringPreferencesKey("khl_id")] ?: "",
             pref[stringPreferencesKey("location")] ?: "",
