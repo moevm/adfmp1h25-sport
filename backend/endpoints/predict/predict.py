@@ -68,12 +68,15 @@ def make_predict(id):
     return "ok", 200
 
 
-@predict_bp.route('/get_predicts', methods=['GET'])
-@token_required
-def get_predicts():
-    user_id = request.args.get('user_id')
-    start_time = int(request.args.get('start_time'))
-    end_time = int(request.args.get('end_time'))
+@app.route('/predict/get_predicts', methods=['GET'])
+@get_user_id
+def get_predicts(id):
+    user_id = request.args.get('user_id', '')
+    start_time = request.args.get('start_time', None)
+    end_time = request.args.get('end_time', None)
+    
+    if user_id == 'current':
+        user_id = id
 
     if not (user_id and start_time and end_time):
         return {"message": "missed parameters"}, 400
