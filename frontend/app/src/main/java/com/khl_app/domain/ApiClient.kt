@@ -16,7 +16,7 @@ fun loadUrl(): String {
 }
 
 object ApiClient {
-    private val BASE_URL = loadUrl()
+    private val BASE_URL = "http://91.149.254.113:6969"
 
     private val gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create()
     private val retrofit: Retrofit by lazy {

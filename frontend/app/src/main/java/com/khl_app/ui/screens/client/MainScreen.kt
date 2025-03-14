@@ -240,14 +240,14 @@ fun NavigationButtons(
     val todayIndex = dateGroups.indexOf(today)
 
     // Функция для поиска предыдущей даты относительно сегодня
-    fun findNearestFutureDate(): Int {
+    fun findNearestPastDate(): Int {
         if (dateGroups.isEmpty()) return -1
         if (todayIndex <= 0) return dateGroups.size - 1  // Если сегодня уже первый день или его нет, берем последний
         return todayIndex - 1  // Берем предыдущий день относительно сегодня
     }
 
     // Функция для поиска следующей даты относительно сегодня
-    fun findNearestPastDate(): Int {
+    fun findNearestFutureDate(): Int {
         if (dateGroups.isEmpty()) return -1
         if (todayIndex < 0 || todayIndex >= dateGroups.size - 1) return 0  // Если сегодня последний день или его нет, берем первый
         return todayIndex + 1  // Берем следующий день относительно сегодня
@@ -371,6 +371,7 @@ fun TopBar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(color = Color(0xFF1D1F2B))
             .padding(horizontal = 10.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
