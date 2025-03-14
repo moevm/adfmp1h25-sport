@@ -1,9 +1,9 @@
 package com.khl_app.ui.navigation
 
+import MainViewModel
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import com.khl_app.ui.view_models.MainViewModel
 
 
 @Composable
