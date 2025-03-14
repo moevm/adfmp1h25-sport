@@ -1,3 +1,4 @@
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.khl_app.domain.ApiClient
 import com.khl_app.domain.models.EventPredictionItem
@@ -33,55 +34,87 @@ class EventViewModel(
 
     fun loadEvents() {
         viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                // Ждем, пока загрузятся команды
-                val teamsMap = teamViewModel.teamsMap.first()
-                if (teamsMap.isEmpty()) {
-                    println("Teams cache is empty")
-                    _error.value = "Команды не загружены"
-                    _isLoading.value = false
-                    return@launch
-                }
+            loadEventsAsync()
+        }
+    }
 
-                val startTime = currentStartDate.timeInMillis / 1000
-                val endTime = currentEndDate.timeInMillis / 1000
-                val token = authViewModel.getAuthToken()
+    // Асинхронная версия для последовательного выполнения
+    suspend fun loadEventsAsync() {
+        _isLoading.value = true
+        try {
+            Log.d("EventViewModel", "Loading events, first ensuring teams are loaded...")
 
-                if (token.isEmpty()) {
-                    _error.value = "Cannot load events: Auth token is empty"
-                    _isLoading.value = false
-                    return@launch
-                }
+            // Проверяем и ждем загрузки команд
+            val teamsLoaded = teamViewModel.awaitTeamsLoaded()
 
-                val response = ApiClient.apiService.getEvents(
-                    token = token, start = startTime, end = endTime, teams = emptyList()
-                )
-
-                if (response.isSuccessful && response.body() != null) {
-                    val events = response.body()!!.map { it.event }
-                    val eventsList = mapEventsToEventPredictionItems(events, teamsMap)
-                    _events.value = eventsList
-                    _error.value = null
-                } else {
-                    _error.value = "Не удалось загрузить события: ${response.code()} - ${response.message()}"
-                }
-            } catch (e: Exception) {
-                handleError(e, "Ошибка загрузки событий")
-            } finally {
+            if (!teamsLoaded) {
+                Log.e("EventViewModel", "Failed to load teams, aborting event loading")
+                _error.value = "Не удалось загрузить команды"
                 _isLoading.value = false
+                return
             }
+
+            // Получаем карту команд
+            val teamsMap = teamViewModel.teamsMap.first()
+            if (teamsMap.isEmpty()) {
+                Log.e("EventViewModel", "Teams cache is empty")
+                _error.value = "Команды не загружены"
+                _isLoading.value = false
+                return
+            }
+
+            Log.d("EventViewModel", "Teams loaded successfully (${teamsMap.size} teams), proceeding to load events...")
+
+            val startTime = currentStartDate.timeInMillis / 1000
+            val endTime = currentEndDate.timeInMillis / 1000
+            val token = authViewModel.getAuthToken()
+
+            if (token.isEmpty()) {
+                Log.e("EventViewModel", "Cannot load events: Auth token is empty")
+                _error.value = "Cannot load events: Auth token is empty"
+                _isLoading.value = false
+                return
+            }
+
+            Log.d("EventViewModel", "Fetching events from API for period $startTime - $endTime")
+            val response = ApiClient.apiService.getEvents(
+                token = token, start = startTime, end = endTime, teams = emptyList()
+            )
+
+            if (response.isSuccessful && response.body() != null) {
+                val events = response.body()!!.map { it.event }
+                Log.d("EventViewModel", "Received ${events.size} events from API")
+
+                val eventsList = mapEventsToEventPredictionItems(events, teamsMap)
+                _events.value = eventsList
+                _error.value = null
+                Log.d("EventViewModel", "Successfully loaded and mapped ${eventsList.size} events")
+            } else {
+                val errorMsg = "Не удалось загрузить события: ${response.code()} - ${response.message()}"
+                Log.e("EventViewModel", errorMsg)
+                _error.value = errorMsg
+            }
+        } catch (e: Exception) {
+            handleError(e, "Ошибка загрузки событий")
+        } finally {
+            _isLoading.value = false
         }
     }
 
     fun loadMorePastEvents() {
-        currentStartDate.add(Calendar.DAY_OF_MONTH, -3)
-        loadEvents()
+        viewModelScope.launch {
+            currentStartDate.add(Calendar.DAY_OF_MONTH, -3)
+            Log.d("EventViewModel", "Loading more past events, new start date: ${currentStartDate.time}")
+            loadEventsAsync()
+        }
     }
 
     fun loadMoreFutureEvents() {
-        currentEndDate.add(Calendar.DAY_OF_MONTH, 3)
-        loadEvents()
+        viewModelScope.launch {
+            currentEndDate.add(Calendar.DAY_OF_MONTH, 3)
+            Log.d("EventViewModel", "Loading more future events, new end date: ${currentEndDate.time}")
+            loadEventsAsync()
+        }
     }
 
     private fun mapEventsToEventPredictionItems(
@@ -91,7 +124,7 @@ class EventViewModel(
         val dateFormat = SimpleDateFormat("dd.MM.yy", Locale.getDefault())
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
-        println("Mapping ${events.size} events to UI model")
+        Log.d("EventViewModel", "Mapping ${events.size} events to UI model")
         return events.mapNotNull { event ->
             // Используем id команд как строки для поиска в кэше
             val teamAData = teamsMap[event.teamA.id.toString()]
@@ -109,7 +142,7 @@ class EventViewModel(
                     result = if (event.score.isNotEmpty()) event.score else null
                 )
             } else {
-                println("Missing team data for event, teamA: ${event.teamA.id}, teamB: ${event.teamB.id}")
+                Log.w("EventViewModel", "Missing team data for event, teamA: ${event.teamA.id}, teamB: ${event.teamB.id}")
                 null // Пропускаем события, для которых нет информации о командах
             }
         }.sortedBy { it.date } // Сортируем по дате
