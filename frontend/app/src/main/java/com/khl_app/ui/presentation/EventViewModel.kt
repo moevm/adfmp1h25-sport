@@ -27,7 +27,7 @@ class EventViewModel(
     private var currentEndDate = Calendar.getInstance()
 
     init {
-        // Установка начального диапазона дат (3 дня до и после текущей даты)
+        // Устанавливаем начальный диапазон дат (3 дня до и после текущей даты)
         currentStartDate.add(Calendar.DAY_OF_MONTH, -3)
         currentEndDate.add(Calendar.DAY_OF_MONTH, 3)
     }
@@ -44,7 +44,7 @@ class EventViewModel(
         try {
             Log.d("EventViewModel", "Loading events, first ensuring teams are loaded...")
 
-            // Проверяем и ждем загрузки команд
+            // Проверяем и ждём загрузки команд
             val teamsLoaded = teamViewModel.awaitTeamsLoaded()
 
             if (!teamsLoaded) {
@@ -78,7 +78,10 @@ class EventViewModel(
 
             Log.d("EventViewModel", "Fetching events from API for period $startTime - $endTime")
             val response = ApiClient.apiService.getEvents(
-                token = token, start = startTime, end = endTime, teams = emptyList()
+                token = token,
+                start = startTime,
+                end = endTime,
+                teams = emptyList()
             )
 
             if (response.isSuccessful && response.body() != null) {
@@ -126,7 +129,7 @@ class EventViewModel(
 
         Log.d("EventViewModel", "Mapping ${events.size} events to UI model")
         return events.mapNotNull { event ->
-            // Используем id команд как строки для поиска в кэше
+            // Используем id команд в качестве ключей для поиска в кэше
             val teamAData = teamsMap[event.teamA.id.toString()]
             val teamBData = teamsMap[event.teamB.id.toString()]
 

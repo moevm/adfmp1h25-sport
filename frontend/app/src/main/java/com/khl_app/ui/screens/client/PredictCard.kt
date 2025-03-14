@@ -49,8 +49,7 @@ fun PredictCardItem(item: EventPredictionItem) {
             )
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .background(Color.DarkGray.copy(alpha = 0.3f), shape = androidx.compose.foundation.shape.CircleShape),
+                    .size(60.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -63,55 +62,53 @@ fun PredictCardItem(item: EventPredictionItem) {
                     ),
                     contentDescription = item.teamA.name,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(60.dp)
                 )
             }
         }
 
+        // Center column (scores and time)
         // Center column (scores and time)
         Column(
             modifier = Modifier.weight(1.5f),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            if (item.prediction != null || item.result != null) {
-                Text(
-                    text = "${item.time} ${item.date}",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Light,
-                    color = Color.White
-                )
+            Text(
+                text = "${item.time} ${item.date}",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Light,
+                color = Color.White
+            )
 
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
-                    Text(
-                        text = item.result ?: item.prediction ?: "",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = when {
-                            item.result?.contains(":") == true -> Color.White
-                            item.prediction?.contains(":") == true -> if (item.prediction.startsWith("4:3")) Color.Red else Color.Green
-                            else -> Color.White
-                        }
-                    )
-                }
-
-                if (item.result != null && item.prediction != null) {
-                    Text(
-                        text = if (item.result.isNotEmpty()) "Итог" else "Прогноз",
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                }
-            } else {
+            // Display result if available
+            if (item.result != null) {
                 Text(
-                    text = "${item.time}",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    text = "Итог: ${item.result}",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(vertical = 2.dp)
                 )
+            }
+
+            // Display prediction if available
+            if (item.prediction != null) {
+                Text(
+                    text = "Прогноз: ${item.prediction}",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = when {
+                        item.result == null -> Color.White // No result yet
+                        item.prediction == item.result -> Color.Green // Correct prediction
+                        else -> Color.Red // Incorrect prediction
+                    },
+                    modifier = Modifier.padding(vertical = 2.dp)
+                )
+            }
+
+            // If neither prediction nor result is available
+            if (item.result == null && item.prediction == null) {
                 Text(
                     text = "Сегодня",
                     fontSize = 12.sp,
@@ -134,17 +131,10 @@ fun PredictCardItem(item: EventPredictionItem) {
             )
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .background(Color.DarkGray.copy(alpha = 0.3f), shape = androidx.compose.foundation.shape.CircleShape)
+                    .size(60.dp)
                     .align(Alignment.End),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "logo",
-                    color = Color.White,
-                    fontSize = 10.sp
-                )
-
                 Image(
                     rememberAsyncImagePainter(
                         model = ImageRequest.Builder(LocalContext.current)
@@ -155,7 +145,7 @@ fun PredictCardItem(item: EventPredictionItem) {
                     ),
                     contentDescription = item.teamB.name,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(60.dp)
                 )
             }
         }

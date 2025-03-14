@@ -17,19 +17,17 @@ class MainViewModel(
     private val teamViewModel = TeamViewModel(application, teamCache, authViewModel)
     private val eventViewModel = EventViewModel(teamViewModel, authViewModel)
 
-    // Auth delegating methods
+    // Методы делегирования для аутентификации
     fun login(login: String, password: String, onResult: (String?) -> Unit) {
         Log.d("MainViewModel", "Login attempt with login: $login")
         authViewModel.login(login, password) { error ->
             if (error == null) {
                 Log.d("MainViewModel", "Login successful, proceeding to fetch teams")
-                // Если логин успешен, загружаем команды
                 viewModelScope.launch {
                     try {
                         val teamError = teamViewModel.fetchAndSaveTeamsAsync()
                         if (teamError == null) {
                             Log.d("MainViewModel", "Teams loaded successfully, loading events")
-                            // Если команды загрузились, загружаем события
                             eventViewModel.loadEventsAsync()
                         } else {
                             Log.e("MainViewModel", "Team loading failed: $teamError")
@@ -48,18 +46,15 @@ class MainViewModel(
     }
 
     fun register(login: String, password: String, onResult: (String?) -> Unit) {
-        // Аналогично методу login
         Log.d("MainViewModel", "Register attempt with login: $login")
         authViewModel.login(login, password) { error ->
             if (error == null) {
                 Log.d("MainViewModel", "Registration successful, proceeding to fetch teams")
-                // Если регистрация успешна, загружаем команды
                 viewModelScope.launch {
                     try {
                         val teamError = teamViewModel.fetchAndSaveTeamsAsync()
                         if (teamError == null) {
                             Log.d("MainViewModel", "Teams loaded successfully, loading events")
-                            // Если команды загрузились, загружаем события
                             eventViewModel.loadEventsAsync()
                         } else {
                             Log.e("MainViewModel", "Team loading failed: $teamError")
@@ -94,7 +89,7 @@ class MainViewModel(
                         onResult(true)
                     } catch (e: Exception) {
                         Log.e("MainViewModel", "Exception during team loading", e)
-                        onResult(true) // Все равно считаем токен валидным
+                        onResult(true) // Считаем, что токен валиден, даже если произошла ошибка загрузки команд
                     }
                 }
             } else {
@@ -104,12 +99,12 @@ class MainViewModel(
         }
     }
 
-    // Events delegating properties
+    // Делегированные свойства для событий
     val events = eventViewModel.events
     val isLoading = eventViewModel.isLoading
     val error = eventViewModel.error
 
-    // Events delegating methods
+    // Методы делегирования для событий
     fun loadEvents() {
         Log.d("MainViewModel", "Loading events, ensuring teams are loaded first")
         viewModelScope.launch {
@@ -138,9 +133,9 @@ class MainViewModel(
         eventViewModel.loadMoreFutureEvents()
     }
 
-    // Team delegating methods
+    // Методы делегирования для работы с командами
     fun getCurrentTeam(onResult: (TeamData?) -> Unit) {
-        // Реализация
         Log.d("MainViewModel", "Getting current team - not implemented")
+        // Здесь должна быть реализация получения текущей команды
     }
 }

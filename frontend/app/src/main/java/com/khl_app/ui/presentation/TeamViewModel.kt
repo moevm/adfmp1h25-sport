@@ -104,11 +104,11 @@ class TeamViewModel(
                     )
 
                     teamCache.saveInfo(teamData)
-                    // Добавляем в новую карту
+                    // Добавляем новую информацию в карту
                     newTeamsMap[team.id.toString()] = teamData
                 }
 
-                // Обновляем StateFlow
+                // Обновляем StateFlow на главном потоке
                 withContext(Dispatchers.Main) {
                     _teamsMap.value = newTeamsMap
                     _teamsLoaded.value = true
@@ -191,7 +191,7 @@ class TeamViewModel(
                 val fileName = "team_logo_$teamId.png"
                 val file = File(directory, fileName)
 
-                // Если файл уже существует, просто возвращаем путь
+                // Если файл уже существует, возвращаем его путь
                 if (file.exists()) {
                     return@withContext file.absolutePath
                 }
@@ -203,7 +203,7 @@ class TeamViewModel(
                 connection.connect()
 
                 val inputStream = connection.getInputStream()
-                val bitmap = BitmapFactory.decodeStream(inputStream)
+                val bitmap: Bitmap = BitmapFactory.decodeStream(inputStream)
                 inputStream.close()
 
                 val outputStream = FileOutputStream(file)

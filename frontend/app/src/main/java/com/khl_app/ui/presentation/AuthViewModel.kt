@@ -11,7 +11,7 @@ class AuthViewModel(
 ) : BaseViewModel() {
 
     fun login(login: String, password: String, onResult: (String?) -> Unit) {
-        print("bla bla")
+        println("Starting login process")
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -35,26 +35,46 @@ class AuthViewModel(
     }
 
     fun register(login: String, password: String, onResult: (String?) -> Unit) {
-        // Аналогично методу login
+        println("Starting register process")
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // Логика регистрации аналогична логике входа в систему
+                val response = ApiClient.apiService.register(mapOf("login" to login, "password" to password))
+                if (response.isSuccessful && response.body() != null) {
+                    val tokenData = TokenData(response.body()!!.accessToken, response.body()!!.refreshToken)
+                    tokenCache.saveInfo(tokenData)
+                    onResult(null)
+                } else {
+                    val errorMsg = "Registration failed: ${response.code()} - ${response.message()}"
+                    _error.value = errorMsg
+                    onResult(errorMsg)
+                }
+            } catch (e: Exception) {
+                handleError(e, "Registration exception")
+                onResult(e.message)
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 
     fun checkTokenValidity(onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
-                // Get cached token
+                // Получаем сохранённый токен
                 val token = tokenCache.getInfo().first()
 
-                // Debug log
                 Log.d("TokenCheck", "Retrieved token: ${token.accessToken.take(10)}... (length: ${token.accessToken.length})")
 
-                // If no token, return false
+                // Если токен отсутствует, возвращаем false
                 if (token.accessToken.isEmpty()) {
                     Log.w("TokenCheck", "No access token found")
                     onResult(false)
                     return@launch
                 }
 
-                // Check token validity with API
+                // Проверяем валидность токена через API
                 Log.d("TokenCheck", "Checking token validity...")
                 val response = ApiClient.apiService.isTokenValid("Bearer ${token.accessToken}")
 
@@ -63,7 +83,7 @@ class AuthViewModel(
                     onResult(true)
                 } else {
                     Log.e("TokenCheck", "Token validation failed: ${response.code()} - ${response.message()}")
-                    // Try refresh token if available
+                    // Если имеется refresh токен, пробуем обновить токен
                     if (token.refreshToken.isNotEmpty()) {
                         Log.d("TokenCheck", "Attempting to refresh token...")
                         refreshToken(token.refreshToken) { refreshSuccess ->
@@ -86,10 +106,9 @@ class AuthViewModel(
         viewModelScope.launch {
             try {
                 val response = ApiClient.apiService.refresh("Bearer $refreshToken")
-
                 if (response.isSuccessful) {
                     response.body()?.let { loginResponse ->
-                        // Save new tokens
+                        // Сохранение новых токенов
                         tokenCache.saveInfo(
                             TokenData(
                                 accessToken = loginResponse.accessToken,

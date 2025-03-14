@@ -100,12 +100,12 @@ fun MainScreen(viewModel: MainViewModel) {
         }
     }
 
-    // Загружаем события при первом отображении экрана
-    LaunchedEffect(Unit) {
-        if (events.isEmpty()) {
-            viewModel.loadEvents()
-        }
-    }
+//    // Загружаем события при первом отображении экрана
+//    LaunchedEffect(Unit) {
+//        if (events.isEmpty()) {
+//            viewModel.loadEvents()
+//        }
+//    }
 
     // Скроллим к сегодняшней дате при первой загрузке данных
     LaunchedEffect(events.isNotEmpty()) {
