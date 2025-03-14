@@ -1,18 +1,26 @@
 package com.khl_app.domain.models
 
+import com.google.gson.annotations.SerializedName
 import java.security.Timestamp
 import java.util.Date
 
-data class EventResponse(
-    val id: String,
-    val period: Long,
-    val score: String,
-    val startAt: Timestamp,
-    val startAtDay: Date,
-    val teamA: Team,
-    val teamB: Team,
+data class EventWrapper(
+    val event: EventResponse
 )
 
-data class Team (
-    val id: String,
+data class EventResponse(
+    val id: Int,
+    val period: Long,
+    val score: String,
+    @SerializedName("start_at") val startAt: Long,
+    @SerializedName("start_at_day") val startAtDay: Long,
+    @SerializedName("team_a") val teamA: TeamId,
+    @SerializedName("team_b") val teamB: TeamId,
+) {
+    val timestamp: Date
+        get() = Date(startAt)
+}
+
+data class TeamId(
+    val id: Int
 )
