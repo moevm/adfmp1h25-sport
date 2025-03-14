@@ -48,6 +48,12 @@ def refresh():
     return jsonify(create_tokens(identity)), 200
 
 
+@auth_bp.route('/is_token_valid', methods=['GET'])
+@jwt_required()
+def refresh():
+    return "ok"
+
+
 @auth_bp.route('/register', methods=['POST'])
 def register():
     if not request.is_json:
