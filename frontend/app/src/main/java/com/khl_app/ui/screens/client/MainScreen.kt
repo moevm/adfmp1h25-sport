@@ -22,7 +22,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.rememberNavController
 import com.khl_app.domain.models.EventPredictionItem
+import com.khl_app.ui.navigation.Screen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -40,6 +42,7 @@ fun MainScreen(viewModel: MainViewModel) {
 
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
+    val navHostController = rememberNavController()
 
     // Сохраняем последнюю позицию прокрутки для восстановления после подгрузки
     var lastFirstVisibleItem by remember { mutableStateOf(0) }
@@ -136,7 +139,9 @@ fun MainScreen(viewModel: MainViewModel) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        TopBar()
+        TopBar(onMenuClick = {
+            navHostController.navigate(Screen.ProfileScreen.route)
+        })
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -367,7 +372,7 @@ fun NavigationButtons(
 }
 
 @Composable
-fun TopBar() {
+fun TopBar(onMenuClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -376,7 +381,7 @@ fun TopBar() {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        MenuButton()
+        MenuButton(onMenuClick = onMenuClick)
         CenterContent(
             modifier = Modifier
                 .weight(1f)
@@ -411,8 +416,8 @@ fun CenterContent(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun MenuButton() {
-    IconButton(onClick = { }) {
+fun MenuButton(onMenuClick: () -> Unit) {
+    IconButton(onClick = onMenuClick) {
         Icon(
             Icons.Rounded.Menu,
             contentDescription = "Menu Button",

@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.khl_app.ui.screens.client.MainScreen
+import com.khl_app.ui.screens.ProfileScreen
 
 fun NavGraphBuilder.clientNavigation(navHostController: NavHostController, viewModel: MainViewModel) {
     composable(
