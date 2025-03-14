@@ -68,7 +68,7 @@ def make_predict(id):
     return "ok", 200
 
 
-@app.route('/predict/get_predicts', methods=['GET'])
+@predict_bp.route('/get_predicts', methods=['GET'])
 @get_user_id
 def get_predicts(id):
     user_id = request.args.get('user_id', '')
