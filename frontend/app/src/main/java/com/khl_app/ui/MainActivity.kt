@@ -1,5 +1,6 @@
 package com.khl_app.ui
 
+import MainViewModel
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.Window
@@ -18,21 +19,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import com.auth0.jwt.JWT
-import com.auth0.jwt.interfaces.DecodedJWT
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import com.khl_app.domain.ApiClient
-import com.khl_app.domain.models.EventResponse
-import com.khl_app.domain.models.TeamResponse
 import com.khl_app.storage.TeamPreferenceRepository
 import com.khl_app.storage.TokenPreferenceRepository
 import com.khl_app.ui.navigation.AppNavGraph
 import com.khl_app.ui.themes.KhlAppTheme
-import com.khl_app.ui.view_models.MainViewModel
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+
 
 class MainActivity : ComponentActivity() {
     private val tokenCache = TokenPreferenceRepository(this)

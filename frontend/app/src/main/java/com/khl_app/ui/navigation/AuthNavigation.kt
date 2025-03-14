@@ -1,12 +1,12 @@
 package com.khl_app.ui.navigation
 
+import MainViewModel
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.khl_app.ui.screens.auth.LoginScreen
 import com.khl_app.ui.screens.auth.RegisterScreen
-import com.khl_app.ui.view_models.MainViewModel
 
 fun NavGraphBuilder.authNavigation(navHostController: NavHostController, viewModel: MainViewModel) {
     composable(

@@ -1,30 +1,27 @@
 package com.khl_app.ui.screens.auth
 
-import androidx.compose.foundation.Image
+import MainViewModel
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,27 +29,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.khl_app.R
-import com.khl_app.R.drawable
-import com.khl_app.ui.themes.KhlAppTheme
-import com.khl_app.ui.view_models.MainViewModel
 
 @Composable
 fun RegisterScreen(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     viewModel: MainViewModel,
     onLogin: () -> Unit,
     onRegistration: () -> Unit,
@@ -61,90 +49,139 @@ fun RegisterScreen(
     var login by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf(defaultErrorMsg) }
+
+    val darkGrayBackground = Color(0xFF333333)
+    val lightGrayText = Color(0xFFCCCCCC)
+    val lightGrayButton = Color(0xFF666666)
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(darkGrayBackground)
             .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.SpaceAround
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         Column(
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(15.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 20.dp)
         ) {
-            Image(
-                painter = painterResource(drawable.account_icon),
-                contentDescription = null,
-                contentScale = ContentScale.FillHeight,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxSize(0.25f),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.secondary)
-            )
-            Text(
-                text = "Registration",
-                textAlign = TextAlign.Left,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 30.sp,
-                color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-            )
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = login,
-                onValueChange = {
-                    login = it
-                },
-                placeholder = {
-                    Text(
-                        text = stringResource(R.string.placeholder_login),
-                        fontSize = 20.sp,
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(0.dp)
+            ) {
+                TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 0.dp),
+                    value = login,
+                    onValueChange = {
+                        login = it
+                    },
+                    placeholder = {
+                        Text(
+                            text = "Логин",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = lightGrayText
+                        )
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Login Icon",
+                            tint = lightGrayText
+                        )
+                    },
+                    singleLine = true,
+                    textStyle = TextStyle(
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.secondary
+                        color = lightGrayText
+                    ),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text
+                    ),
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = darkGrayBackground,
+                        focusedContainerColor = darkGrayBackground,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent,
                     )
-                },
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                textStyle = TextStyle(
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = MaterialTheme.colorScheme.secondary
-                ),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text
-                ),
-            )
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = password,
-                onValueChange = {
-                    password = it
-                },
-                placeholder = {
-                    Text(
-                        text = stringResource(R.string.placeholder_password),
-                        fontSize = 20.sp,
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(lightGrayText)
+                )
+            }
+
+            // Поле для пароля с отдельной линией
+            Column(
+                verticalArrangement = Arrangement.spacedBy(0.dp),
+                modifier = Modifier.padding(top = 5.dp)
+            ) {
+                TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 0.dp),
+                    value = password,
+                    onValueChange = {
+                        password = it
+                    },
+                    placeholder = {
+                        Text(
+                            text = "Пароль",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = lightGrayText
+                        )
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Password Icon",
+                            tint = lightGrayText
+                        )
+                    },
+                    singleLine = true,
+                    textStyle = TextStyle(
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.secondary,
+                        color = lightGrayText
+                    ),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password
+                    ),
+                    visualTransformation = PasswordVisualTransformation(),
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = darkGrayBackground,
+                        focusedContainerColor = darkGrayBackground,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent,
                     )
-                },
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                textStyle = TextStyle(
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = MaterialTheme.colorScheme.secondary
-                ),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password
-                ),
-                visualTransformation = PasswordVisualTransformation()
-            )
-            val isActive = login.isNotEmpty() && password.isNotEmpty()
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(lightGrayText)
+                )
+            }
+
+            // Добавляем отступ перед кнопкой
+            Box(modifier = Modifier.padding(top = 10.dp))
+
             Button(
-                enabled = isActive,
                 onClick = {
                     viewModel.login(login, password) { success ->
                         if (success.isNullOrEmpty()) {
@@ -154,50 +191,43 @@ fun RegisterScreen(
                         }
                     }
                 },
-                colors = ButtonColors(
-                    contentColor = MaterialTheme.colorScheme.secondary,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    disabledContentColor = MaterialTheme.colorScheme.secondary,
-                    disabledContainerColor = MaterialTheme.colorScheme.primary
+                modifier = Modifier.width(150.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = lightGrayButton,
+                    contentColor = lightGrayText
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.btn_registration),
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(vertical = 8.dp),
+                    text = "Регистрация",
+                    fontSize = 16.sp
                 )
             }
-            Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+
+            TextButton(
+                onClick = onLogin,
+                modifier = Modifier.padding(top = 8.dp)
             ) {
                 Text(
-                    text = "Already have an account? ",
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                Text(
-                    text = stringResource(R.string.btn_login),
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.clickable {
-                        onLogin()
-                    }
+                    text = "Войти",
+                    color = lightGrayText,
+                    fontSize = 14.sp
                 )
             }
-            if (!errorMessage.isNullOrEmpty()) {
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 40.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
-                    errorMessage!!, color = MaterialTheme.colorScheme.error
+                    text = "Мы не относимся к КХЛ и не несем ответственности за содержание",
+                    fontSize = 12.sp,
+                    color = lightGrayText,
+                    textAlign = TextAlign.Center
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun RegisterPreview() {
-    KhlAppTheme {
-        RegisterScreen(Modifier, viewModel(), {}, {})
     }
 }
