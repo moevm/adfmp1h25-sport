@@ -50,7 +50,7 @@ def refresh():
 
 @auth_bp.route('/is_token_valid', methods=['GET'])
 @jwt_required()
-def refresh():
+def is_valid():
     return "ok"
 
 
