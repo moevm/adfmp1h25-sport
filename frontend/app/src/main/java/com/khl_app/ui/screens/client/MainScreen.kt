@@ -141,7 +141,7 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFF2C2F3E)) // Темно-синий фон как на скриншоте
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(top = 20.dp, bottom = 10.dp, start = 10.dp, end = 10.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -158,8 +158,6 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
                 }
             }
         )
-
-        Spacer(modifier = Modifier.height(12.dp))
 
         // Навигационные кнопки
         NavigationButtons(
