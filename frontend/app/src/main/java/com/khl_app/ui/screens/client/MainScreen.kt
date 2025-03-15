@@ -1,5 +1,6 @@
 package com.khl_app.ui.screens.client
 
+import AuthViewModel
 import MainViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -35,24 +36,25 @@ fun MainScreen(viewModel: MainViewModel) {
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    // Добавим состояния для отслеживания типа загрузки
-    var isLoadingFuture by remember { mutableStateOf(false) }
-    var isLoadingPast by remember { mutableStateOf(false) }
+    // Объединяем состояния загрузки в одну переменную для предотвращения множественных запросов
+    var loadingDirection by remember { mutableStateOf(LoadDirection.NONE) }
 
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    // Сохраняем последнюю позицию прокрутки для восстановления после подгрузки
-    var lastFirstVisibleItem by remember { mutableStateOf(0) }
-    var lastFirstVisibleItemOffset by remember { mutableStateOf(0) }
+    // Сохраняем индекс отображаемого элемента перед загрузкой новых элементов
+    var initialItemIndex by remember { mutableStateOf(0) }
+    var initialItemOffset by remember { mutableStateOf(0) }
+    var previousItemsCount by remember { mutableStateOf(0) }
 
-    // Запоминаем текущую позицию прокрутки перед загрузкой данных
+    // Сохраняем текущую позицию скролла
     LaunchedEffect(listState) {
         snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
             .collect { (index, offset) ->
                 if (!isLoading) {
-                    lastFirstVisibleItem = index
-                    lastFirstVisibleItemOffset = offset
+                    initialItemIndex = index
+                    initialItemOffset = offset
+                    previousItemsCount = events.size
                 }
             }
     }
@@ -65,7 +67,7 @@ fun MainScreen(viewModel: MainViewModel) {
             val totalItemsCount = layoutInfo.totalItemsCount
 
             // Проверяем, находимся ли мы в начале списка (новые события)
-            val isAtTop = firstVisibleIndex == 0
+            val isAtTop = firstVisibleIndex == 0 && listState.firstVisibleItemScrollOffset == 0
 
             // Проверяем, находимся ли мы в конце списка (старые события)
             val isAtBottom = if (totalItemsCount > 0) {
@@ -78,38 +80,37 @@ fun MainScreen(viewModel: MainViewModel) {
             // Добавляем debounce — не чаще одного раза в 1000 мс
             .debounce(1000L)
             .collect { (isAtTop, isAtBottom) ->
-                if (isAtTop && !isLoading && events.isNotEmpty()) {
-                    // Загружаем более новые события
-                    isLoadingFuture = true
-                    isLoadingPast = false
-                    viewModel.loadMoreFutureEvents()
-                }
-
-                if (isAtBottom && !isLoading && events.isNotEmpty()) {
-                    // Загружаем более старые события
-                    isLoadingPast = true
-                    isLoadingFuture = false
-                    viewModel.loadMorePastEvents()
+                // Предотвращаем множественные запросы - загрузка только когда нет активной загрузки
+                if (!isLoading && loadingDirection == LoadDirection.NONE && events.isNotEmpty()) {
+                    if (isAtTop) {
+                        // Загружаем более новые события
+                        loadingDirection = LoadDirection.FUTURE
+                        viewModel.loadMoreFutureEvents()
+                    } else if (isAtBottom) {
+                        // Загружаем более старые события
+                        loadingDirection = LoadDirection.PAST
+                        viewModel.loadMorePastEvents()
+                    }
                 }
             }
     }
 
-    // Восстанавливаем позицию прокрутки после загрузки данных
+    // Восстанавливаем позицию скролла после загрузки данных
     LaunchedEffect(isLoading) {
-        if (!isLoading && (isLoadingFuture || isLoadingPast)) {
-            // После загрузки возвращаемся к последней позиции просмотра
-            listState.scrollToItem(lastFirstVisibleItem, lastFirstVisibleItemOffset)
-            isLoadingFuture = false
-            isLoadingPast = false
+        if (!isLoading && loadingDirection != LoadDirection.NONE) {
+            if (loadingDirection == LoadDirection.FUTURE && events.size > previousItemsCount) {
+                // Вычисляем смещение из-за новых элементов сверху
+                val newItemsCount = events.size - previousItemsCount
+                // Скроллим к предыдущей позиции с учетом добавленных элементов
+                listState.scrollToItem(initialItemIndex + newItemsCount, initialItemOffset)
+            } else if (loadingDirection == LoadDirection.PAST) {
+                // При загрузке прошлых событий восстанавливаем позицию как есть
+                listState.scrollToItem(initialItemIndex, initialItemOffset)
+            }
+
+            loadingDirection = LoadDirection.NONE
         }
     }
-
-//    // Загружаем события при первом отображении экрана
-//    LaunchedEffect(Unit) {
-//        if (events.isEmpty()) {
-//            viewModel.loadEvents()
-//        }
-//    }
 
     // Скроллим к сегодняшней дате при первой загрузке данных
     LaunchedEffect(events.isNotEmpty()) {
@@ -180,7 +181,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     // Верхний индикатор загрузки (для будущих событий)
-                    if (isLoadingFuture) {
+                    if (loadingDirection == LoadDirection.FUTURE && isLoading) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -199,11 +200,16 @@ fun MainScreen(viewModel: MainViewModel) {
                         modifier = Modifier
                             .weight(1f)
                     ) {
-                        MatchList(events = events, listState = listState)
+                        MatchList(
+                            events = events,
+                            listState = listState,
+                            authViewModel = viewModel.authViewModel,
+                            onPredictionMade = { viewModel.loadEvents() }  // Перезагружаем события после прогноза
+                        )
                     }
 
                     // Нижний индикатор загрузки (для прошлых событий)
-                    if (isLoadingPast) {
+                    if (loadingDirection == LoadDirection.PAST && isLoading) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -220,6 +226,11 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         }
     }
+}
+
+// Перечисление для отслеживания направления загрузки
+enum class LoadDirection {
+    NONE, FUTURE, PAST
 }
 
 @Composable
@@ -438,7 +449,12 @@ fun SettingsButton() {
 }
 
 @Composable
-fun MatchList(events: List<EventPredictionItem>, listState: LazyListState) {
+fun MatchList(
+    events: List<EventPredictionItem>,
+    listState: LazyListState,
+    authViewModel: AuthViewModel,
+    onPredictionMade: () -> Unit
+) {
     // Группируем события по дате и сортируем в обратном хронологическом порядке (новые вверху)
     val groupItems = events.groupBy { it.date }
         .toList()
@@ -485,7 +501,12 @@ fun MatchList(events: List<EventPredictionItem>, listState: LazyListState) {
             }
 
             items(cards) { card ->
-                PredictCardItem(card)
+                PredictCardItem(
+                    item = card,
+                    eventId = card.id.toString(),
+                    authViewModel = authViewModel,
+                    onPredictionMade = onPredictionMade
+                )
             }
         }
     }

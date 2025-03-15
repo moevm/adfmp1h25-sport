@@ -168,7 +168,9 @@ class EventViewModel(
                     date = dateFormat.format(date),
                     time = timeFormat.format(date),
                     prediction = prediction,
-                    result = if (event.score.isNotEmpty()) event.score else null
+                    result = if (event.score.isNotEmpty()) event.score else null,
+                    period = event.period,
+                    id = event.id
                 )
             } else {
                 null

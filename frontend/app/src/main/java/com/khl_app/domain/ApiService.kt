@@ -46,4 +46,12 @@ interface ApiService {
         @Query("start_time") start: Long?,
         @Query("end_time") end: Long?
     ): Response<Map<String, Map<String, String>>?>
+
+    @GET("predict/predict")
+    suspend fun postPredict(
+        @Header("Authorization") token: String,
+        @Query("user_id") userId: String,
+        @Query("score") score: String,
+        @Query("event") eventId: String
+    ): Response<String>
 }

@@ -13,7 +13,7 @@ class MainViewModel(
     teamCache: IRepository<TeamData>
 ) : ViewModel() {
 
-    private val authViewModel = AuthViewModel(tokenCache)
+    val authViewModel = AuthViewModel(tokenCache)
     private val teamViewModel = TeamViewModel(application, teamCache, authViewModel)
     private val eventViewModel = EventViewModel(teamViewModel, authViewModel)
 
