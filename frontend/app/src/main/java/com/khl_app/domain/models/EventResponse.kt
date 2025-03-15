@@ -10,7 +10,7 @@ data class EventWrapper(
 
 data class EventResponse(
     val id: Int,
-    val period: Long,
+    val period: Long?,
     val score: String,
     @SerializedName("start_at") val startAt: Long,
     @SerializedName("start_at_day") val startAtDay: Long,

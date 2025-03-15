@@ -1,6 +1,7 @@
 package com.khl_app.ui.screens.auth
 
 import MainViewModel
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,7 +50,6 @@ fun LoginScreen(
     var login by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf(defaultErrorMsg) }
-    var isLoading by remember { mutableStateOf(false) }
 
     val darkGrayBackground = Color(0xFF333333)
     val lightGrayText = Color(0xFFCCCCCC)
@@ -182,44 +180,29 @@ fun LoginScreen(
             // Добавляем отступ перед кнопкой
             Box(modifier = Modifier.padding(top = 10.dp))
 
-            // Индикатор загрузки или кнопка входа в зависимости от состояния
-            if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .width(100.dp)
-                        .height(36.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = lightGrayText
-                    )
-                }
-            } else {
-                Button(
-                    onClick = {
-                        isLoading = true
-                        viewModel.login(login, password) { success ->
-                            isLoading = false
-                            if (success.isNullOrEmpty()) {
-                                onLogin()
-                            } else {
-                                errorMessage = success
-                            }
+            // Кнопка входа
+            Button(
+                onClick = {
+                    viewModel.login(login, password) { success ->
+                        Log.d("loggg", success.toString())
+                        if (success.isNullOrEmpty()) {
+                            onLogin()
+                        } else {
+                            errorMessage = success
                         }
-                    },
-                    modifier = Modifier.width(100.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = lightGrayButton,
-                        contentColor = lightGrayText
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = "Войти",
-                        fontSize = 16.sp
-                    )
-                }
+                    }
+                },
+                modifier = Modifier.width(100.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = lightGrayButton,
+                    contentColor = lightGrayText
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "Войти",
+                    fontSize = 16.sp
+                )
             }
 
             TextButton(

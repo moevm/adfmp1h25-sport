@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.khl_app.domain.models.EventPredictionItem
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -73,21 +74,24 @@ fun MainScreen(viewModel: MainViewModel) {
             } else false
 
             Pair(isAtTop, isAtBottom)
-        }.collect { (isAtTop, isAtBottom) ->
-            if (isAtTop && !isLoading && events.isNotEmpty()) {
-                // Мы в начале списка, загружаем более новые события
-                isLoadingFuture = true
-                isLoadingPast = false
-                viewModel.loadMoreFutureEvents()
-            }
-
-            if (isAtBottom && !isLoading && events.isNotEmpty()) {
-                // Мы в конце списка, загружаем более старые события
-                isLoadingPast = true
-                isLoadingFuture = false
-                viewModel.loadMorePastEvents()
-            }
         }
+            // Добавляем debounce — не чаще одного раза в 1000 мс
+            .debounce(1000L)
+            .collect { (isAtTop, isAtBottom) ->
+                if (isAtTop && !isLoading && events.isNotEmpty()) {
+                    // Загружаем более новые события
+                    isLoadingFuture = true
+                    isLoadingPast = false
+                    viewModel.loadMoreFutureEvents()
+                }
+
+                if (isAtBottom && !isLoading && events.isNotEmpty()) {
+                    // Загружаем более старые события
+                    isLoadingPast = true
+                    isLoadingFuture = false
+                    viewModel.loadMorePastEvents()
+                }
+            }
     }
 
     // Восстанавливаем позицию прокрутки после загрузки данных

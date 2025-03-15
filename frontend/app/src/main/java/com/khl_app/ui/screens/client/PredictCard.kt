@@ -1,5 +1,6 @@
 package com.khl_app.ui.screens.client
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -93,6 +94,7 @@ fun PredictCardItem(item: EventPredictionItem) {
             }
 
             // Display prediction if available
+            Log.d("game", item.prediction.toString())
             if (item.prediction != null) {
                 Text(
                     text = "Прогноз: ${item.prediction}",

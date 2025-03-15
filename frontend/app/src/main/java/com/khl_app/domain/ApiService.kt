@@ -45,5 +45,5 @@ interface ApiService {
         @Query("user_id") userId: String,
         @Query("start_time") start: Long?,
         @Query("end_time") end: Long?
-    ): Response<Map<String, Map<String, String>>>
+    ): Response<Map<String, Map<String, String>>?>
 }
