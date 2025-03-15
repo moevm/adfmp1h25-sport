@@ -183,7 +183,7 @@ fun RegisterScreen(
 
             Button(
                 onClick = {
-                    viewModel.login(login, password) { success ->
+                    viewModel.register(login, password) { success ->
                         if (success.isNullOrEmpty()) {
                             onRegistration()
                         } else {
