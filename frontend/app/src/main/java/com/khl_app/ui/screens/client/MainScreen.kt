@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 @Composable
 fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
@@ -144,9 +145,19 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        TopBar(onMenuClick = {
-            navHostController.navigate(Screen.ProfileScreen.route)
-        })
+        TopBar(
+            viewModel = viewModel,
+            onMenuClick = {
+                navHostController.navigate(Screen.ProfileScreen.route)
+            },
+            onFilterApplied = {
+                // Перезагружаем события с новыми фильтрами
+                scope.launch {
+                    loadingDirection = LoadDirection.NONE
+                    viewModel.loadEvents()
+                }
+            }
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -387,11 +398,14 @@ fun NavigationButtons(
 }
 
 @Composable
-fun TopBar(onMenuClick: () -> Unit) {
+fun TopBar(
+    viewModel: MainViewModel,
+    onMenuClick: () -> Unit,
+    onFilterApplied: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = Color(0xFF1D1F2B))
             .padding(horizontal = 10.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -402,7 +416,10 @@ fun TopBar(onMenuClick: () -> Unit) {
                 .weight(1f)
                 .padding(horizontal = 20.dp)
         )
-        SettingsButton()
+        SettingsButton(
+            mainViewModel = viewModel,
+            onFilterApplied = onFilterApplied
+        )
     }
 }
 
@@ -442,16 +459,85 @@ fun MenuButton(onMenuClick: () -> Unit) {
     }
 }
 
+// Обновленная функция SettingsButton для MainScreen.kt
 @Composable
-fun SettingsButton() {
-    IconButton(onClick = { }) {
+fun SettingsButton(
+    mainViewModel: MainViewModel,
+    onFilterApplied: () -> Unit
+) {
+    // Состояние для контроля отображения диалога фильтрации
+    val showFilterDialog = remember { mutableStateOf(false) }
+
+    // Состояния для сохранения выбранных фильтров
+    val selectedDate = remember { mutableStateOf<LocalDate?>(null) }
+    val selectedTeamIds = remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // Получаем данные о командах из TeamViewModel
+    val teamsMap by mainViewModel.teamViewModel.teamsMap.collectAsState()
+
+    // Преобразуем Map<String, TeamData> в список TeamBasicInfo для диалога фильтрации
+    val teamsForFilter = teamsMap.values.map { teamData ->
+        TeamBasicInfo(
+            id = teamData.id.toString(),
+            name = teamData.name,
+            logoUrl = teamData.image,
+            division = teamData.division
+        )
+    }
+
+    // Кнопка настроек
+    IconButton(onClick = { showFilterDialog.value = true }) {
         Icon(
             Icons.Rounded.Settings,
-            contentDescription = "Settings Button",
+            contentDescription = "Настройки и фильтры",
             modifier = Modifier.size(28.dp),
             tint = Color.White
         )
     }
+
+    // Диалог фильтрации
+    FilterDialog(
+        show = showFilterDialog.value,
+        teams = teamsForFilter,
+        initialSelectedDate = selectedDate.value,
+        initialSelectedTeams = selectedTeamIds.value,
+        onDismiss = { showFilterDialog.value = false },
+        onApply = { date, teamIds ->
+            // Сохраняем выбранные значения для возможного повторного открытия диалога
+            selectedDate.value = date
+            selectedTeamIds.value = teamIds
+
+            // Устанавливаем фильтры в EventViewModel
+            if (date != null) {
+                // Если выбрана конкретная дата, устанавливаем диапазон на этот день
+                val startCalendar = Calendar.getInstance().apply {
+                    set(date.year, date.monthValue - 1, date.dayOfMonth, 0, 0, 0)
+                }
+                val endCalendar = Calendar.getInstance().apply {
+                    set(date.year, date.monthValue - 1, date.dayOfMonth, 23, 59, 59)
+                }
+                mainViewModel.eventViewModel.setDateRange(startCalendar, endCalendar)
+            } else {
+                // Если дата не выбрана, используем стандартный диапазон (±3 дня)
+                val startDate = Calendar.getInstance().apply {
+                    add(Calendar.DAY_OF_MONTH, -3)
+                }
+                val endDate = Calendar.getInstance().apply {
+                    add(Calendar.DAY_OF_MONTH, 3)
+                }
+                mainViewModel.eventViewModel.setDateRange(startDate, endDate)
+            }
+
+            // Устанавливаем выбранные команды
+            mainViewModel.eventViewModel.setSelectedTeams(teamIds)
+
+            // Закрываем диалог
+            showFilterDialog.value = false
+
+            // Вызываем колбэк для применения фильтров и перезагрузки данных
+            onFilterApplied()
+        }
+    )
 }
 
 @Composable

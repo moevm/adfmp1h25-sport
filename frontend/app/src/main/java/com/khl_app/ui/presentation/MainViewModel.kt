@@ -14,8 +14,8 @@ class MainViewModel(
 ) : ViewModel() {
 
     val authViewModel = AuthViewModel(tokenCache)
-    private val teamViewModel = TeamViewModel(application, teamCache, authViewModel)
-    private val eventViewModel = EventViewModel(teamViewModel, authViewModel)
+    val teamViewModel = TeamViewModel(application, teamCache, authViewModel)
+    val eventViewModel = EventViewModel(teamViewModel, authViewModel)
 
     fun login(login: String, password: String, onResult: (String?) -> Unit) {
         viewModelScope.launch {

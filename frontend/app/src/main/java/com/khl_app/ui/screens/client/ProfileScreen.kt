@@ -48,7 +48,7 @@ fun ProfileScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ProfileTopBar(onMenuClick = { navHostController.navigate(Screen.MainScreen.route) })
+        //ProfileTopBar(onMenuClick = { navHostController.navigate(Screen.MainScreen.route) })
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -202,24 +202,24 @@ fun ProfileScreen(
     }
 
 
-@Composable
-fun ProfileTopBar(onMenuClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        MenuButton(onMenuClick = onMenuClick)
-        ProfileCenterContent(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 20.dp)
-        )
-        SettingsButton()
-    }
-}
+//@Composable
+//fun ProfileTopBar(onMenuClick: () -> Unit) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(horizontal = 10.dp, vertical = 12.dp),
+//        horizontalArrangement = Arrangement.SpaceBetween,
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        MenuButton(onMenuClick = onMenuClick)
+//        ProfileCenterContent(
+//            modifier = Modifier
+//                .weight(1f)
+//                .padding(horizontal = 20.dp)
+//        )
+//        SettingsButton()
+//    }
+//}
 
 @Composable
 fun ProfileCenterContent(modifier: Modifier = Modifier) {

@@ -1,4 +1,4 @@
-// EventViewModel.kt
+// EventViewModel.kt (с добавленными методами)
 import android.util.Log
 import com.khl_app.domain.ApiClient
 import com.khl_app.domain.models.EventPredictionItem
@@ -28,9 +28,49 @@ class EventViewModel(
     private var currentStartDate = Calendar.getInstance()
     private var currentEndDate = Calendar.getInstance()
 
+    // Добавленные переменные для хранения данных пользователя и фильтров
+    private val _userName = MutableStateFlow<String>("")
+    val userName: StateFlow<String> = _userName
+
+    private val _userId = MutableStateFlow<String>("current")
+    val userId: StateFlow<String> = _userId
+
+    private val _selectedTeams = MutableStateFlow<List<String>>(emptyList())
+    val selectedTeams: StateFlow<List<String>> = _selectedTeams
+
     init {
-        currentStartDate.add(Calendar.DAY_OF_MONTH, -3)
-        currentEndDate.add(Calendar.DAY_OF_MONTH, 3)
+        currentStartDate.add(Calendar.DAY_OF_MONTH, -10)
+        currentEndDate.add(Calendar.DAY_OF_MONTH, 10)
+    }
+
+    // Метод для установки имени пользователя
+    fun setUserName(name: String) {
+        _userName.value = name
+        Log.d("EventsViewModel", "User name set to: $name")
+    }
+
+    // Метод для установки ID пользователя
+    fun setUserId(id: String) {
+        _userId.value = id.ifEmpty { "current" }
+        Log.d("EventsViewModel", "User ID set to: ${_userId.value}")
+    }
+
+    // Метод для установки диапазона дат
+    fun setDateRange(startDate: Calendar, endDate: Calendar) {
+        currentStartDate = startDate
+        currentEndDate = endDate
+        Log.d("EventsViewModel", "Date range set: ${formatDate(startDate.time)} to ${formatDate(endDate.time)}")
+    }
+
+    // Метод для установки выбранных команд
+    fun setSelectedTeams(teams: List<String>) {
+        _selectedTeams.value = teams
+        Log.d("EventsViewModel", "Selected teams: ${teams.joinToString()}")
+    }
+
+    // Вспомогательный метод форматирования даты для логов
+    private fun formatDate(date: Date): String {
+        return SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(date)
     }
 
     suspend fun loadEventsSequentially() {
@@ -74,7 +114,7 @@ class EventViewModel(
                         token = token,
                         start = startTime,
                         end = endTime,
-                        teams = emptyList()
+                        teams = if (_selectedTeams.value.isEmpty()) null else _selectedTeams.value.joinToString(", ")
                     )
 
                     Log.d("EventsViewModel", "Events API response code: ${response.code()}")
@@ -87,7 +127,7 @@ class EventViewModel(
                         try {
                             val predictionsResponse = ApiClient.apiService.getPredictions(
                                 token = token,
-                                userId = "current",
+                                userId = _userId.value, // Используем ID пользователя
                                 start = startTime,
                                 end = endTime
                             )
@@ -137,13 +177,19 @@ class EventViewModel(
         }
     }
 
+    // Добавляем метод для обновления данных с использованием всех параметров
+    suspend fun refreshEvents() {
+        Log.d("EventsViewModel", "Refreshing events with current filters")
+        loadEventsSequentially()
+    }
+
     suspend fun loadMorePastEventsSequentially() {
-        currentStartDate.add(Calendar.DAY_OF_MONTH, -3)
+        currentStartDate.add(Calendar.DAY_OF_MONTH, -10)
         loadEventsSequentially()
     }
 
     suspend fun loadMoreFutureEventsSequentially() {
-        currentEndDate.add(Calendar.DAY_OF_MONTH, 3)
+        currentEndDate.add(Calendar.DAY_OF_MONTH, 10)
         loadEventsSequentially()
     }
 
