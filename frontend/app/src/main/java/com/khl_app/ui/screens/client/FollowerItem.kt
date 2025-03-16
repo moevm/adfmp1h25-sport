@@ -47,7 +47,6 @@ fun FollowerItem(
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar with colored border
             Box(
                 modifier = Modifier
                     .size(70.dp)
@@ -121,11 +120,9 @@ fun FollowerItem(
 
             Spacer(modifier = Modifier.width(20.dp))
 
-            // User info (name and level)
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                // Name
                 Text(
                     text = follower.name,
                     color = Color.White,
@@ -133,7 +130,6 @@ fun FollowerItem(
                     fontWeight = FontWeight.Medium
                 )
 
-                // Level label
                 Text(
                     text = LevelSystem.getLevelLabel(follower.points),
                     color = LevelSystem.getPointsColor(follower.points),
@@ -142,7 +138,6 @@ fun FollowerItem(
                 )
             }
 
-            // Action buttons
             if(!isYou) {
                 Row {
                     IconButton(
