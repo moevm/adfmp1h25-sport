@@ -122,7 +122,6 @@ fun RegisterScreen(
                 )
             }
 
-            // Поле для пароля с отдельной линией
             Column(
                 verticalArrangement = Arrangement.spacedBy(0.dp),
                 modifier = Modifier.padding(top = 5.dp)
@@ -178,12 +177,11 @@ fun RegisterScreen(
                 )
             }
 
-            // Добавляем отступ перед кнопкой
             Box(modifier = Modifier.padding(top = 10.dp))
 
             Button(
                 onClick = {
-                    viewModel.login(login, password) { success ->
+                    viewModel.register(login, password) { success ->
                         if (success.isNullOrEmpty()) {
                             onRegistration()
                         } else {

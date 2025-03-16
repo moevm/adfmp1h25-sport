@@ -42,4 +42,10 @@ class TeamPreferenceRepository (
             pref[stringPreferencesKey("name")] ?: ""
         )
     }
+
+    override suspend fun deleteInfo() {
+        context.dataStore.edit {
+            it.clear()
+        }
+    }
 }

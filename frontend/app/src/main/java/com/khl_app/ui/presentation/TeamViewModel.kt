@@ -1,7 +1,7 @@
+// TeamViewModel.kt
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import androidx.lifecycle.viewModelScope
 import com.khl_app.domain.ApiClient
 import com.khl_app.domain.models.TeamWrapper
 import com.khl_app.domain.storage.IRepository
@@ -9,7 +9,7 @@ import com.khl_app.storage.models.TeamData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -21,62 +21,52 @@ class TeamViewModel(
     private val authViewModel: AuthViewModel
 ) : BaseViewModel() {
 
-    // Кэш команд для быстрого доступа
     private val _teamsMap = MutableStateFlow<Map<String, TeamData>>(emptyMap())
     val teamsMap: StateFlow<Map<String, TeamData>> = _teamsMap
 
-    init {
-        viewModelScope.launch {
-            loadTeamsToCache()
-        }
-    }
+    private val _teamsLoaded = MutableStateFlow(false)
+    val teamsLoaded: StateFlow<Boolean> = _teamsLoaded
 
-    fun fetchAndSaveTeams(onResult: (String?) -> Unit) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
+    suspend fun fetchAndSaveTeamsSequentially(): String? {
+        _isLoading.value = true
+        return try {
+            withContext(Dispatchers.IO) {
                 val token = authViewModel.getAuthToken()
                 if (token.isEmpty()) {
                     val errorMsg = "Cannot fetch teams: Auth token is empty"
                     _error.value = errorMsg
-                    onResult(errorMsg)
-                    return@launch
+                    return@withContext errorMsg
                 }
 
                 val response = ApiClient.apiService.getTeams(token)
-
                 if (response.isSuccessful && response.body() != null) {
-                    processTeams(response.body()!!, onResult)
+                    processTeamsSequentially(response.body()!!)
                 } else {
                     val errorMsg = "Failed to fetch teams: ${response.code()} - ${response.message()}"
                     _error.value = errorMsg
-                    onResult(errorMsg)
+                    errorMsg
                 }
-            } catch (e: Exception) {
-                handleError(e, "Error fetching teams")
-                onResult(e.message)
-            } finally {
-                _isLoading.value = false
             }
+        } catch (e: Exception) {
+            handleError(e, "Error fetching teams")
+            e.message
+        } finally {
+            _isLoading.value = false
         }
     }
 
-    private suspend fun processTeams(wrappers: List<TeamWrapper>, onResult: (String?) -> Unit) {
-        withContext(Dispatchers.IO) {
+    private suspend fun processTeamsSequentially(wrappers: List<TeamWrapper>): String? {
+        return withContext(Dispatchers.IO) {
             try {
-                println("Processing ${wrappers.size} teams...")
                 val logoDir = File(context.filesDir, "team_logos")
                 if (!logoDir.exists()) {
                     logoDir.mkdirs()
                 }
 
-                // Создаем новую карту для обновления
-                val newTeamsMap = _teamsMap.value.toMutableMap()
-
+                val newTeamsMap = mutableMapOf<String, TeamData>()
                 for (wrapper in wrappers) {
                     val team = wrapper.team
                     val localImagePath = downloadAndSaveImage(team.image, team.id.toString(), logoDir)
-
                     val teamData = TeamData(
                         conference = team.conference,
                         conferenceKey = team.conferenceKey,
@@ -88,50 +78,49 @@ class TeamViewModel(
                         location = team.location,
                         name = team.name
                     )
-
                     teamCache.saveInfo(teamData)
-                    // Добавляем в новую карту
                     newTeamsMap[team.id.toString()] = teamData
                 }
 
-                // Обновляем StateFlow
-                withContext(Dispatchers.Main) {
-                    _teamsMap.value = newTeamsMap
-                }
-
-                println("Teams processed and saved to cache")
-                withContext(Dispatchers.Main) {
-                    onResult(null)
-                }
+                _teamsMap.value = newTeamsMap
+                _teamsLoaded.value = true
+                null
             } catch (e: Exception) {
                 val errorMsg = "Error processing teams: ${e.message}"
-                println(errorMsg)
-                e.printStackTrace()
-                withContext(Dispatchers.Main) {
-                    onResult(errorMsg)
-                }
+                _error.value = errorMsg
+                errorMsg
             }
         }
     }
 
-    private suspend fun loadTeamsToCache() {
-        try {
-            val tempMap = mutableMapOf<String, TeamData>()
-
-            teamCache.getInfo().collect { teamData ->
-                if (teamData != null) {
-                    // Добавляем каждый элемент во временную карту
+    suspend fun loadTeamsFromCache(): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val teams = teamCache.getInfo().toList().filterNotNull()
+                val tempMap = mutableMapOf<String, TeamData>()
+                teams.forEach { teamData ->
                     tempMap[teamData.id.toString()] = teamData
                 }
+                _teamsMap.value = tempMap
+                val loaded = tempMap.isNotEmpty()
+                _teamsLoaded.value = loaded
+                loaded
+            } catch (e: Exception) {
+                val errorMsg = "Ошибка загрузки команд: ${e.message}"
+                _error.value = errorMsg
+                _teamsLoaded.value = false
+                false
             }
-
-            // Обновляем StateFlow, присваивая ему новую карту
-            _teamsMap.value = tempMap
-        } catch (e: Exception) {
-            val errorMsg = "Ошибка загрузки команд: ${e.message}"
-            println(errorMsg)
-            _error.value = errorMsg
         }
+    }
+
+    suspend fun awaitTeamsLoadedSequentially(): Boolean {
+        if (_teamsLoaded.value) return true
+        if (_teamsMap.value.isEmpty()) {
+            val loaded = loadTeamsFromCache()
+            if (loaded) return true
+        }
+        return _teamsLoaded.value
     }
 
     private suspend fun downloadAndSaveImage(imageUrl: String, teamId: String, directory: File): String {
@@ -139,27 +128,25 @@ class TeamViewModel(
             try {
                 val fileName = "team_logo_$teamId.png"
                 val file = File(directory, fileName)
-
-                val url = URL(imageUrl)
-                val connection = url.openConnection()
-                connection.connectTimeout = 5000
-                connection.readTimeout = 5000
-                connection.connect()
-
-                val inputStream = connection.getInputStream()
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                inputStream.close()
-
-                val outputStream = FileOutputStream(file)
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                outputStream.flush()
-                outputStream.close()
-
-                return@withContext file.absolutePath
+                if (file.exists()) {
+                    file.absolutePath
+                } else {
+                    val url = URL(imageUrl)
+                    val connection = url.openConnection()
+                    connection.connectTimeout = 5000
+                    connection.readTimeout = 5000
+                    connection.connect()
+                    val inputStream = connection.getInputStream()
+                    val bitmap: Bitmap = BitmapFactory.decodeStream(inputStream)
+                    inputStream.close()
+                    val outputStream = FileOutputStream(file)
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                    outputStream.flush()
+                    outputStream.close()
+                    file.absolutePath
+                }
             } catch (e: Exception) {
-                println("Error downloading image $imageUrl: ${e.message}")
-                e.printStackTrace()
-                return@withContext ""
+                ""
             }
         }
     }

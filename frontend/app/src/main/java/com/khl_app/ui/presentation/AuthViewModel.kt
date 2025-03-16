@@ -1,118 +1,101 @@
+// AuthViewModel.kt
 import android.util.Log
-import androidx.lifecycle.viewModelScope
 import com.khl_app.domain.ApiClient
 import com.khl_app.domain.storage.IRepository
+import com.khl_app.storage.getUserIdFromToken
 import com.khl_app.storage.models.TokenData
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class AuthViewModel(
     private val tokenCache: IRepository<TokenData>
 ) : BaseViewModel() {
 
-    fun login(login: String, password: String, onResult: (String?) -> Unit) {
-        print("bla bla")
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
+    suspend fun loginSuspend(login: String, password: String): String? {
+        _isLoading.value = true
+        return try {
+            withContext(Dispatchers.IO) {
                 val response = ApiClient.apiService.login(mapOf("login" to login, "password" to password))
                 if (response.isSuccessful && response.body() != null) {
-                    val tokenData = TokenData(response.body()!!.accessToken, response.body()!!.refreshToken)
+                    val tokenData = TokenData(
+                        accessToken = response.body()!!.accessToken,
+                        refreshToken = response.body()!!.refreshToken
+                    )
                     tokenCache.saveInfo(tokenData)
-                    onResult(null)
+                    null
                 } else {
                     val errorMsg = "Login failed: ${response.code()} - ${response.message()}"
                     _error.value = errorMsg
-                    onResult(errorMsg)
+                    errorMsg
                 }
-            } catch (e: Exception) {
-                handleError(e, "Login exception")
-                onResult(e.message)
-            } finally {
-                _isLoading.value = false
             }
+        } catch (e: Exception) {
+            handleError(e, "Login exception")
+            e.message
+        } finally {
+            _isLoading.value = false
         }
     }
 
-    fun register(login: String, password: String, onResult: (String?) -> Unit) {
-        // Аналогично методу login
+    suspend fun registerSuspend(login: String, password: String): String? {
+        return loginSuspend(login, password)
     }
 
-    fun checkTokenValidity(onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            try {
-                // Get cached token
+    suspend fun checkTokenValiditySuspend(): Boolean {
+        return try {
+            withContext(Dispatchers.IO) {
                 val token = tokenCache.getInfo().first()
-
-                // Debug log
-                Log.d("TokenCheck", "Retrieved token: ${token.accessToken.take(10)}... (length: ${token.accessToken.length})")
-
-                // If no token, return false
                 if (token.accessToken.isEmpty()) {
-                    Log.w("TokenCheck", "No access token found")
-                    onResult(false)
-                    return@launch
-                }
-
-                // Check token validity with API
-                Log.d("TokenCheck", "Checking token validity...")
-                val response = ApiClient.apiService.isTokenValid("Bearer ${token.accessToken}")
-
-                if (response.isSuccessful) {
-                    Log.d("TokenCheck", "Token is valid")
-                    onResult(true)
+                    false
                 } else {
-                    Log.e("TokenCheck", "Token validation failed: ${response.code()} - ${response.message()}")
-                    // Try refresh token if available
-                    if (token.refreshToken.isNotEmpty()) {
-                        Log.d("TokenCheck", "Attempting to refresh token...")
-                        refreshToken(token.refreshToken) { refreshSuccess ->
-                            Log.d("TokenCheck", "Token refresh result: $refreshSuccess")
-                            onResult(refreshSuccess)
-                        }
+                    val response = ApiClient.apiService.isTokenValid("Bearer ${token.accessToken}")
+                    if (response.isSuccessful) {
+                        true
                     } else {
-                        Log.w("TokenCheck", "No refresh token available")
-                        onResult(false)
+                        if (token.refreshToken.isNotEmpty()) {
+                            refreshTokenSuspend(token.refreshToken)
+                        } else {
+                            false
+                        }
                     }
                 }
-            } catch (e: Exception) {
-                Log.e("TokenCheck", "Exception during token validation: ${e.message}", e)
-                onResult(false)
             }
+        } catch (e: Exception) {
+            false
         }
     }
 
-    private fun refreshToken(refreshToken: String, onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            try {
+    private suspend fun refreshTokenSuspend(refreshToken: String): Boolean {
+        return try {
+            withContext(Dispatchers.IO) {
                 val response = ApiClient.apiService.refresh("Bearer $refreshToken")
-
                 if (response.isSuccessful) {
                     response.body()?.let { loginResponse ->
-                        // Save new tokens
                         tokenCache.saveInfo(
                             TokenData(
                                 accessToken = loginResponse.accessToken,
                                 refreshToken = loginResponse.refreshToken
                             )
                         )
-                        onResult(true)
-                    } ?: onResult(false)
+                        true
+                    } ?: false
                 } else {
-                    onResult(false)
+                    false
                 }
-            } catch (e: Exception) {
-                onResult(false)
             }
+        } catch (e: Exception) {
+            false
         }
     }
 
     suspend fun getAuthToken(): String {
         return try {
-            val tokenData = tokenCache.getInfo().first()
-            "Bearer ${tokenData.accessToken}"
+            withContext(Dispatchers.IO) {
+                val tokenData = tokenCache.getInfo().first()
+                "Bearer ${tokenData.accessToken}"
+            }
         } catch (e: Exception) {
-            println("Error getting auth token: ${e.message}")
             ""
         }
     }

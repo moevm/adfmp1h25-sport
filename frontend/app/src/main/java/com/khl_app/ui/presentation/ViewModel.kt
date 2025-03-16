@@ -11,8 +11,6 @@ abstract class BaseViewModel : ViewModel() {
 
     protected suspend fun handleError(e: Exception, message: String) {
         val errorMsg = "$message: ${e.message}"
-        println(errorMsg)
-        e.printStackTrace()
         _error.value = errorMsg
     }
 }

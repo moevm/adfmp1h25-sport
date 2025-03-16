@@ -2,6 +2,7 @@ package com.khl_app.domain
 
 import com.khl_app.domain.models.EventResponse
 import com.khl_app.domain.models.EventWrapper
+import com.khl_app.domain.models.FollowerResponse
 import com.khl_app.domain.models.LoginResponse
 import com.khl_app.domain.models.TeamResponse
 import com.khl_app.domain.models.TeamWrapper
@@ -31,8 +32,13 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Query("start_time") start: Long?,
         @Query("end_time") end: Long?,
-        @Query("teams") teams: List<String>
+        @Query("teams") teams: String? // Изменили тип на String
     ): Response<List<EventWrapper>>
+
+    @GET("followers/get_followers")
+    suspend fun getFollowers(
+        @Header("Authorization") token: String
+    ): Response<List<FollowerResponse>>
 
     @GET("teams/get_teams")
     suspend fun getTeams(
@@ -45,5 +51,25 @@ interface ApiService {
         @Query("user_id") userId: String,
         @Query("start_time") start: Long?,
         @Query("end_time") end: Long?
-    ): Response<Map<String, Map<String, String>>>
+    ): Response<Map<String, Map<String, String>>?>
+
+    @GET("predict/predict")
+    suspend fun postPredict(
+        @Header("Authorization") token: String,
+        @Query("user_id") userId: String,
+        @Query("score") score: String,
+        @Query("event") eventId: String
+    ): Response<String>
+
+    @GET("followers/subscribe")
+    suspend fun subscribe(
+        @Header("Authorization") token: String,
+        @Query("user_id") userId: String,
+    ): Response<String>
+
+    @GET("followers/unsubscribe")
+    suspend fun unsubscribe(
+        @Header("Authorization") token: String,
+        @Query("user_id") userId: String,
+    ): Response<String>
 }

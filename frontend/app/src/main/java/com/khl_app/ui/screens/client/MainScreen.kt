@@ -1,5 +1,6 @@
 package com.khl_app.ui.screens.client
 
+import AuthViewModel
 import MainViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,34 +28,39 @@ import androidx.navigation.compose.rememberNavController
 import com.khl_app.domain.models.EventPredictionItem
 import com.khl_app.ui.navigation.Screen
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
     val events by viewModel.events.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    // Добавим состояния для отслеживания типа загрузки
-    var isLoadingFuture by remember { mutableStateOf(false) }
-    var isLoadingPast by remember { mutableStateOf(false) }
+    // Объединяем состояния загрузки в одну переменную для предотвращения множественных запросов
+    var loadingDirection by remember { mutableStateOf(LoadDirection.NONE) }
+    val bottomSheetState = rememberModalBottomSheetState()
 
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    // Сохраняем последнюю позицию прокрутки для восстановления после подгрузки
-    var lastFirstVisibleItem by remember { mutableStateOf(0) }
-    var lastFirstVisibleItemOffset by remember { mutableStateOf(0) }
+    // Сохраняем индекс отображаемого элемента перед загрузкой новых элементов
+    var initialItemIndex by remember { mutableStateOf(0) }
+    var initialItemOffset by remember { mutableStateOf(0) }
+    var previousItemsCount by remember { mutableStateOf(0) }
 
-    // Запоминаем текущую позицию прокрутки перед загрузкой данных
+    // Сохраняем текущую позицию скролла
     LaunchedEffect(listState) {
         snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
             .collect { (index, offset) ->
                 if (!isLoading) {
-                    lastFirstVisibleItem = index
-                    lastFirstVisibleItemOffset = offset
+                    initialItemIndex = index
+                    initialItemOffset = offset
+                    previousItemsCount = events.size
                 }
             }
     }
@@ -67,7 +73,7 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
             val totalItemsCount = layoutInfo.totalItemsCount
 
             // Проверяем, находимся ли мы в начале списка (новые события)
-            val isAtTop = firstVisibleIndex == 0
+            val isAtTop = firstVisibleIndex == 0 && listState.firstVisibleItemScrollOffset == 0
 
             // Проверяем, находимся ли мы в конце списка (старые события)
             val isAtBottom = if (totalItemsCount > 0) {
@@ -76,37 +82,39 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
             } else false
 
             Pair(isAtTop, isAtBottom)
-        }.collect { (isAtTop, isAtBottom) ->
-            if (isAtTop && !isLoading && events.isNotEmpty()) {
-                // Мы в начале списка, загружаем более новые события
-                isLoadingFuture = true
-                isLoadingPast = false
-                viewModel.loadMoreFutureEvents()
-            }
-
-            if (isAtBottom && !isLoading && events.isNotEmpty()) {
-                // Мы в конце списка, загружаем более старые события
-                isLoadingPast = true
-                isLoadingFuture = false
-                viewModel.loadMorePastEvents()
-            }
         }
+            // Добавляем debounce — не чаще одного раза в 1000 мс
+            .debounce(1000L)
+            .collect { (isAtTop, isAtBottom) ->
+                // Предотвращаем множественные запросы - загрузка только когда нет активной загрузки
+                if (!isLoading && loadingDirection == LoadDirection.NONE && events.isNotEmpty()) {
+                    if (isAtTop) {
+                        // Загружаем более новые события
+                        loadingDirection = LoadDirection.FUTURE
+                        viewModel.loadMoreFutureEvents()
+                    } else if (isAtBottom) {
+                        // Загружаем более старые события
+                        loadingDirection = LoadDirection.PAST
+                        viewModel.loadMorePastEvents()
+                    }
+                }
+            }
     }
 
-    // Восстанавливаем позицию прокрутки после загрузки данных
+    // Восстанавливаем позицию скролла после загрузки данных
     LaunchedEffect(isLoading) {
-        if (!isLoading && (isLoadingFuture || isLoadingPast)) {
-            // После загрузки возвращаемся к последней позиции просмотра
-            listState.scrollToItem(lastFirstVisibleItem, lastFirstVisibleItemOffset)
-            isLoadingFuture = false
-            isLoadingPast = false
-        }
-    }
+        if (!isLoading && loadingDirection != LoadDirection.NONE) {
+            if (loadingDirection == LoadDirection.FUTURE && events.size > previousItemsCount) {
+                // Вычисляем смещение из-за новых элементов сверху
+                val newItemsCount = events.size - previousItemsCount
+                // Скроллим к предыдущей позиции с учетом добавленных элементов
+                listState.scrollToItem(initialItemIndex + newItemsCount, initialItemOffset)
+            } else if (loadingDirection == LoadDirection.PAST) {
+                // При загрузке прошлых событий восстанавливаем позицию как есть
+                listState.scrollToItem(initialItemIndex, initialItemOffset)
+            }
 
-    // Загружаем события при первом отображении экрана
-    LaunchedEffect(Unit) {
-        if (events.isEmpty()) {
-            viewModel.loadEvents()
+            loadingDirection = LoadDirection.NONE
         }
     }
 
@@ -135,15 +143,25 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFF2C2F3E)) // Темно-синий фон как на скриншоте
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(top = 20.dp, bottom = 10.dp, start = 10.dp, end = 10.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        TopBar(onMenuClick = {
-            navHostController.navigate(Screen.ProfileScreen.route)
-        })
-
-        Spacer(modifier = Modifier.height(12.dp))
+        TopBar(
+            viewModel = viewModel,
+            onMenuClick = {
+                scope.launch {
+                    bottomSheetState.show()
+                }
+            },
+            onFilterApplied = {
+                // Перезагружаем события с новыми фильтрами
+                scope.launch {
+                    loadingDirection = LoadDirection.NONE
+                    viewModel.loadEvents()
+                }
+            }
+        )
 
         // Навигационные кнопки
         NavigationButtons(
@@ -181,7 +199,7 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     // Верхний индикатор загрузки (для будущих событий)
-                    if (isLoadingFuture) {
+                    if (loadingDirection == LoadDirection.FUTURE && isLoading) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -200,11 +218,16 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
                         modifier = Modifier
                             .weight(1f)
                     ) {
-                        MatchList(events = events, listState = listState)
+                        MatchList(
+                            events = events,
+                            listState = listState,
+                            authViewModel = viewModel.authViewModel,
+                            onPredictionMade = { viewModel.loadEvents() }  // Перезагружаем события после прогноза
+                        )
                     }
 
                     // Нижний индикатор загрузки (для прошлых событий)
-                    if (isLoadingPast) {
+                    if (loadingDirection == LoadDirection.PAST && isLoading) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -220,7 +243,33 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
                 }
             }
         }
+        if (bottomSheetState.isVisible) {
+            BottomPanel(
+                onCalendar = {},
+                onTrackable = {
+                    navHostController.navigate(Screen.TrackableScreen.route)
+                },
+                onProfile = {
+                    navHostController.navigate(Screen.ProfileScreen.route)
+                },
+                onLogout = {
+                    viewModel.logout()
+                    navHostController.navigate(Screen.LoginScreen.route) {
+                        popUpTo(Screen.MainScreen.route) {
+                            inclusive = true
+                        }
+                    }
+                },
+                bottomSheetState,
+                scope
+            )
+        }
     }
+}
+
+// Перечисление для отслеживания направления загрузки
+enum class LoadDirection {
+    NONE, FUTURE, PAST
 }
 
 @Composable
@@ -372,11 +421,14 @@ fun NavigationButtons(
 }
 
 @Composable
-fun TopBar(onMenuClick: () -> Unit) {
+fun TopBar(
+    viewModel: MainViewModel,
+    onMenuClick: () -> Unit,
+    onFilterApplied: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = Color(0xFF1D1F2B))
             .padding(horizontal = 10.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -387,7 +439,10 @@ fun TopBar(onMenuClick: () -> Unit) {
                 .weight(1f)
                 .padding(horizontal = 20.dp)
         )
-        SettingsButton()
+        SettingsButton(
+            mainViewModel = viewModel,
+            onFilterApplied = onFilterApplied
+        )
     }
 }
 
@@ -427,20 +482,94 @@ fun MenuButton(onMenuClick: () -> Unit) {
     }
 }
 
+// Обновленная функция SettingsButton для MainScreen.kt
 @Composable
-fun SettingsButton() {
-    IconButton(onClick = { }) {
+fun SettingsButton(
+    mainViewModel: MainViewModel,
+    onFilterApplied: () -> Unit
+) {
+    // Состояние для контроля отображения диалога фильтрации
+    val showFilterDialog = remember { mutableStateOf(false) }
+
+    // Состояния для сохранения выбранных фильтров
+    val selectedDate = remember { mutableStateOf<LocalDate?>(null) }
+    val selectedTeamIds = remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // Получаем данные о командах из TeamViewModel
+    val teamsMap by mainViewModel.teamViewModel.teamsMap.collectAsState()
+
+    // Преобразуем Map<String, TeamData> в список TeamBasicInfo для диалога фильтрации
+    val teamsForFilter = teamsMap.values.map { teamData ->
+        TeamBasicInfo(
+            id = teamData.id.toString(),
+            name = teamData.name,
+            logoUrl = teamData.image,
+            division = teamData.division
+        )
+    }
+
+    // Кнопка настроек
+    IconButton(onClick = { showFilterDialog.value = true }) {
         Icon(
             Icons.Rounded.Settings,
-            contentDescription = "Settings Button",
+            contentDescription = "Настройки и фильтры",
             modifier = Modifier.size(28.dp),
             tint = Color.White
         )
     }
+
+    // Диалог фильтрации
+    FilterDialog(
+        show = showFilterDialog.value,
+        teams = teamsForFilter,
+        initialSelectedDate = selectedDate.value,
+        initialSelectedTeams = selectedTeamIds.value,
+        onDismiss = { showFilterDialog.value = false },
+        onApply = { date, teamIds ->
+            // Сохраняем выбранные значения для возможного повторного открытия диалога
+            selectedDate.value = date
+            selectedTeamIds.value = teamIds
+
+            // Устанавливаем фильтры в EventViewModel
+            if (date != null) {
+                // Если выбрана конкретная дата, устанавливаем диапазон на этот день
+                val startCalendar = Calendar.getInstance().apply {
+                    set(date.year, date.monthValue - 1, date.dayOfMonth, 0, 0, 0)
+                }
+                val endCalendar = Calendar.getInstance().apply {
+                    set(date.year, date.monthValue - 1, date.dayOfMonth, 23, 59, 59)
+                }
+                mainViewModel.eventViewModel.setDateRange(startCalendar, endCalendar)
+            } else {
+                // Если дата не выбрана, используем стандартный диапазон (±3 дня)
+                val startDate = Calendar.getInstance().apply {
+                    add(Calendar.DAY_OF_MONTH, -3)
+                }
+                val endDate = Calendar.getInstance().apply {
+                    add(Calendar.DAY_OF_MONTH, 3)
+                }
+                mainViewModel.eventViewModel.setDateRange(startDate, endDate)
+            }
+
+            // Устанавливаем выбранные команды
+            mainViewModel.eventViewModel.setSelectedTeams(teamIds)
+
+            // Закрываем диалог
+            showFilterDialog.value = false
+
+            // Вызываем колбэк для применения фильтров и перезагрузки данных
+            onFilterApplied()
+        }
+    )
 }
 
 @Composable
-fun MatchList(events: List<EventPredictionItem>, listState: LazyListState) {
+fun MatchList(
+    events: List<EventPredictionItem>,
+    listState: LazyListState,
+    authViewModel: AuthViewModel,
+    onPredictionMade: () -> Unit
+) {
     // Группируем события по дате и сортируем в обратном хронологическом порядке (новые вверху)
     val groupItems = events.groupBy { it.date }
         .toList()
@@ -487,7 +616,12 @@ fun MatchList(events: List<EventPredictionItem>, listState: LazyListState) {
             }
 
             items(cards) { card ->
-                PredictCardItem(card)
+                PredictCardItem(
+                    item = card,
+                    eventId = card.id.toString(),
+                    authViewModel = authViewModel,
+                    onPredictionMade = onPredictionMade
+                )
             }
         }
     }

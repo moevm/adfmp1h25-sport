@@ -1,6 +1,8 @@
 package com.khl_app.ui.screens.auth
 
 import MainViewModel
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,7 +23,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -32,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -52,6 +54,8 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf(defaultErrorMsg) }
     var isLoading by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
 
     val darkGrayBackground = Color(0xFF333333)
     val lightGrayText = Color(0xFFCCCCCC)
@@ -182,29 +186,25 @@ fun LoginScreen(
             // Добавляем отступ перед кнопкой
             Box(modifier = Modifier.padding(top = 10.dp))
 
-            // Индикатор загрузки или кнопка входа в зависимости от состояния
+            // Кнопка входа или индикатор загрузки
             if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .width(100.dp)
-                        .height(36.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = lightGrayText
-                    )
-                }
+                CircularProgressIndicator(
+                    modifier = Modifier.size(40.dp),
+                    color = lightGrayText
+                )
             } else {
                 Button(
                     onClick = {
                         isLoading = true
-                        viewModel.login(login, password) { success ->
+                        viewModel.login(login, password) { result ->
+                            Log.d("loggg", result.toString())
                             isLoading = false
-                            if (success.isNullOrEmpty()) {
+                            if (result.isNullOrEmpty()) {
                                 onLogin()
                             } else {
-                                errorMessage = success
+                                errorMessage = result
+                                // Отображаем ошибку в виде toast
+                                Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
                             }
                         }
                     },
@@ -222,16 +222,16 @@ fun LoginScreen(
                 }
             }
 
-            TextButton(
-                onClick = onRegistration,
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Text(
-                    text = "Регистрация",
-                    color = lightGrayText,
-                    fontSize = 14.sp
-                )
-            }
+//            TextButton(
+//                onClick = onRegistration,
+//                modifier = Modifier.padding(top = 8.dp)
+//            ) {
+//                Text(
+//                    text = "Регистрация",
+//                    color = lightGrayText,
+//                    fontSize = 14.sp
+//                )
+//            }
 
             Box(
                 modifier = Modifier
