@@ -3,8 +3,6 @@ package com.khl_app.ui.screens.client
 import AuthViewModel
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,10 +21,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,7 +32,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -70,7 +65,6 @@ fun PredictDialog(
     var isLoading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    // Проверяем, начался ли уже матч
     LaunchedEffect(Unit) {
         if (item.period != null) {
             Toast.makeText(context, "Матч уже начался", Toast.LENGTH_SHORT).show()
@@ -101,14 +95,12 @@ fun PredictDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Первая команда
                     TeamScoreInput(
                         team = item.teamA,
                         score = scoreA,
                         onScoreChange = { scoreA = it }
                     )
 
-                    // Разделитель
                     Text(
                         text = ":",
                         color = Color.White,
@@ -117,7 +109,6 @@ fun PredictDialog(
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
 
-                    // Вторая команда
                     TeamScoreInput(
                         team = item.teamB,
                         score = scoreB,
@@ -223,7 +214,6 @@ fun TeamScoreInput(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(120.dp)
     ) {
-        // Лого команды
         Box(
             modifier = Modifier
                 .size(60.dp),
@@ -245,7 +235,6 @@ fun TeamScoreInput(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Название команды
         Text(
             text = team.name,
             color = Color.White,
@@ -256,11 +245,9 @@ fun TeamScoreInput(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Поле для ввода счёта
         OutlinedTextField(
             value = score,
             onValueChange = {
-                // Ограничиваем ввод только цифрами и максимум 2 символами
                 if (it.length <= 2 && (it.isEmpty() || it.all { char -> char.isDigit() })) {
                     onScoreChange(it)
                 }
@@ -274,11 +261,6 @@ fun TeamScoreInput(
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             ),
-//            colors = TextFieldDefaults.outlinedTextFieldColors(
-//                focusedBorderColor = Color(0xFF6C5CE7),
-//                unfocusedBorderColor = Color.Gray,
-//                cursorColor = Color.White
-//            ),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true
         )
