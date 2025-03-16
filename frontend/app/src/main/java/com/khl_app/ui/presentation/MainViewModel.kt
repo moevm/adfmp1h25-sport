@@ -2,9 +2,11 @@
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.khl_app.domain.ApiClient
 import com.khl_app.domain.storage.IRepository
 import com.khl_app.storage.models.TeamData
 import com.khl_app.storage.models.TokenData
+import com.khl_app.ui.presentation.FollowersViewModel
 import kotlinx.coroutines.launch
 
 class MainViewModel(
@@ -16,6 +18,7 @@ class MainViewModel(
     val authViewModel = AuthViewModel(tokenCache)
     val teamViewModel = TeamViewModel(application, teamCache, authViewModel)
     val eventViewModel = EventViewModel(teamViewModel, authViewModel)
+    val followersViewModel = FollowersViewModel(ApiClient.apiService, tokenCache)
 
     fun login(login: String, password: String, onResult: (String?) -> Unit) {
         viewModelScope.launch {

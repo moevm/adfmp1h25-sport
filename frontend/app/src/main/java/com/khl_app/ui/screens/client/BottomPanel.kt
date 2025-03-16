@@ -59,28 +59,28 @@ fun BottomPanel(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            BottomPanelElement("Calendar", Icons.Filled.DateRange,
+            BottomPanelElement("Календарь", Icons.Filled.DateRange,
                 onClick = {
                     scope.launch {
                         state.hide()
                     }
                     onCalendar()
                 })
-            BottomPanelElement("Trackable", Icons.Filled.Favorite,
+            BottomPanelElement("Отслеживаемые", Icons.Filled.Favorite,
                 onClick = {
                     scope.launch {
                         state.hide()
                     }
                     onTrackable()
                 })
-            BottomPanelElement("Profile", Icons.Filled.Person,
+            BottomPanelElement("Профиль", Icons.Filled.Person,
                 onClick = {
                     scope.launch {
                         state.hide()
                     }
                     onProfile()
                 })
-            BottomPanelElement("Logout", Icons.AutoMirrored.Filled.ExitToApp,
+            BottomPanelElement("Выход", Icons.AutoMirrored.Filled.ExitToApp,
                 onClick = {
                     scope.launch {
                         state.hide()

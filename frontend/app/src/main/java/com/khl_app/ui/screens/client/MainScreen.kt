@@ -246,7 +246,9 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
         if (bottomSheetState.isVisible) {
             BottomPanel(
                 onCalendar = {},
-                onTrackable = {},
+                onTrackable = {
+                    navHostController.navigate(Screen.TrackableScreen.route)
+                },
                 onProfile = {
                     navHostController.navigate(Screen.ProfileScreen.route)
                 },

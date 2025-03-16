@@ -2,6 +2,7 @@ package com.khl_app.domain
 
 import com.khl_app.domain.models.EventResponse
 import com.khl_app.domain.models.EventWrapper
+import com.khl_app.domain.models.FollowerResponse
 import com.khl_app.domain.models.LoginResponse
 import com.khl_app.domain.models.TeamResponse
 import com.khl_app.domain.models.TeamWrapper
@@ -33,6 +34,11 @@ interface ApiService {
         @Query("end_time") end: Long?,
         @Query("teams") teams: String? // Изменили тип на String
     ): Response<List<EventWrapper>>
+
+    @GET("followers/get_followers")
+    suspend fun getFollowers(
+        @Header("Authorization") token: String
+    ): Response<List<FollowerResponse>>
 
     @GET("teams/get_teams")
     suspend fun getTeams(
