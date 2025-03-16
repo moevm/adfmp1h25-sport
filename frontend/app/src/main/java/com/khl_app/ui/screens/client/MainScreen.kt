@@ -250,7 +250,14 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
                 onProfile = {
                     navHostController.navigate(Screen.ProfileScreen.route)
                 },
-                onLogout = {},
+                onLogout = {
+                    viewModel.logout()
+                    navHostController.navigate(Screen.LoginScreen.route) {
+                        popUpTo(Screen.MainScreen.route) {
+                            inclusive = true
+                        }
+                    }
+                },
                 bottomSheetState,
                 scope
             )
