@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -38,7 +39,7 @@ fun FollowerItem(
             // Avatar with colored border
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(60.dp)
                     .clip(CircleShape)
                     .background(getAvatarBorderColor(follower.points)),
                 contentAlignment = Alignment.Center
@@ -85,7 +86,7 @@ fun FollowerItem(
                     modifier = Modifier.size(36.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Phone,
+                        imageVector = Icons.Default.DateRange,
                         contentDescription = "просмотр",
                         tint = Color.Gray
                     )

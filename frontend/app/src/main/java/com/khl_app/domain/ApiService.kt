@@ -60,4 +60,16 @@ interface ApiService {
         @Query("score") score: String,
         @Query("event") eventId: String
     ): Response<String>
+
+    @GET("followers/subscribe")
+    suspend fun subscribe(
+        @Header("Authorization") token: String,
+        @Query("user_id") userId: String,
+    ): Response<String>
+
+    @GET("followers/unsubscribe")
+    suspend fun unsubscribe(
+        @Header("Authorization") token: String,
+        @Query("user_id") userId: String,
+    ): Response<String>
 }

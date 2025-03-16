@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,23 +21,100 @@ import androidx.navigation.NavHostController
 import com.khl_app.ui.navigation.Screen
 import com.khl_app.ui.presentation.FollowersUiState
 import com.khl_app.ui.presentation.FollowersViewModel
+import com.khl_app.ui.presentation.SubscriptionState
 import com.khl_app.ui.screens.client.BottomPanel
 import com.khl_app.ui.screens.client.FollowerItem
 import kotlinx.coroutines.launch
+import android.widget.Toast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FollowersScreen(
     viewModel: FollowersViewModel,
     navHostController: NavHostController
-    //onNavigateToMenu: () -> Unit,
-    //onAddFollower: () -> Unit,
-    //onViewProfile: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val followers by viewModel.followers.collectAsState()
+    val subscriptionState by viewModel.subscriptionState.collectAsState()
+
     val bottomSheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
+
+    val context = LocalContext.current
+
+    var showSubscribeDialog by remember { mutableStateOf(false) }
+    var userIdInput by remember { mutableStateOf("") }
+
+    LaunchedEffect(subscriptionState) {
+        when (subscriptionState) {
+            is SubscriptionState.Success -> {
+                Toast.makeText(
+                    context,
+                    (subscriptionState as SubscriptionState.Success).message,
+                    Toast.LENGTH_SHORT
+                ).show()
+                viewModel.resetSubscriptionState()
+            }
+            is SubscriptionState.Error -> {
+                Toast.makeText(
+                    context,
+                    (subscriptionState as SubscriptionState.Error).message,
+                    Toast.LENGTH_SHORT
+                ).show()
+                viewModel.resetSubscriptionState()
+            }
+            else -> {}
+        }
+    }
+
+    // Диалог для ввода ID пользователя
+    if (showSubscribeDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showSubscribeDialog = false
+                userIdInput = ""
+            },
+            title = { Text("Подписаться на пользователя") },
+            text = {
+                OutlinedTextField(
+                    value = userIdInput,
+                    onValueChange = { userIdInput = it },
+                    label = { Text("ID пользователя") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (userIdInput.isNotEmpty()) {
+                            viewModel.subscribeToUser(userIdInput)
+                            showSubscribeDialog = false
+                            userIdInput = ""
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Введите ID пользователя",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                ) {
+                    Text("Подписаться")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showSubscribeDialog = false
+                        userIdInput = ""
+                    }
+                ) {
+                    Text("Отмена")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -60,7 +138,7 @@ fun FollowersScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = { showSubscribeDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Добавить"
@@ -145,12 +223,24 @@ fun FollowersScreen(
                     }
                 }
             }
+
+            // Индикатор загрузки при подписке/отписке
+            if (subscriptionState is SubscriptionState.Loading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0x80000000)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color.White)
+                }
+            }
         }
     }
 
     if (bottomSheetState.isVisible) {
         BottomPanel(
-            onCalendar = {navHostController.navigate(Screen.MainScreen.route)},
+            onCalendar = { navHostController.navigate(Screen.MainScreen.route) },
             onTrackable = {},
             onProfile = {
                 navHostController.navigate(Screen.ProfileScreen.route)
