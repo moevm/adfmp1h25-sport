@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -30,6 +31,13 @@ import java.time.format.DateTimeFormatter
 
 var ProfilePicture = ""
 var ProfileName = "John Doe"
+var Level = 1
+var Score = 1
+var Forecasts = 1
+var Following = 1
+var Followers = 1
+var WinnerPoints = 1
+var ScorePoints = 1
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,7 +75,7 @@ fun ProfileScreen(
                 .size(240.dp)
                 .clip(CircleShape)
                 .background(Color.DarkGray.copy(alpha = 0.3f))
-                .clickable { showImageDialog = true }, // Открываем диалог при нажатии
+                .clickable { showImageDialog = true },
             contentAlignment = Alignment.Center
         ) {
             if (ProfilePicture != "") {
@@ -79,12 +87,12 @@ fun ProfileScreen(
                             .transformations(CircleCropTransformation())
                             .build()
                     ),
-                    contentDescription = "Profile Picture",
+                    contentDescription = "Фото профиля",
                     modifier = Modifier.size(120.dp)
                 )
             } else {
                 Text(
-                    text = "Add Photo",
+                    text = "Добавить фото",
                     color = Color.White,
                     fontSize = 16.sp
                 )
@@ -95,7 +103,7 @@ fun ProfileScreen(
         if (showImageDialog) {
             AlertDialog(
                 onDismissRequest = { showImageDialog = false },
-                title = { Text("Insert Image URL", color = Color.White) },
+                title = { Text("Вставьте ссылку...", color = Color.White) },
                 text = {
                     BasicTextField(
                         value = tempUrl,
@@ -111,8 +119,8 @@ fun ProfileScreen(
                     TextButton(
                         onClick = {
                             ProfilePicture = tempUrl
-                            tempUrl = "" // Очищаем временное поле
-                            showImageDialog = false // Закрываем диалог
+                            tempUrl = ""
+                            showImageDialog = false
                         }
                     ) {
                         Text("OK", color = Color(0xFF6C5CE7))
@@ -121,15 +129,15 @@ fun ProfileScreen(
                 dismissButton = {
                     TextButton(
                         onClick = {
-                            tempUrl = "" // Очищаем временное поле
-                            showImageDialog = false // Закрываем диалог
+                            tempUrl = ""
+                            showImageDialog = false
                         }
                     ) {
-                        Text("Cancel", color = Color.White)
+                        Text("Отмена", color = Color.White)
                     }
                 },
-                containerColor = Color(0xFF2C2F3E), // Цвет фона диалога
-                textContentColor = Color.White // Цвет текста внутри диалога
+                containerColor = Color(0xFF2C2F3E),
+                textContentColor = Color.White
             )
         }
 
@@ -138,11 +146,11 @@ fun ProfileScreen(
         // Кнопка для смены фото (доступна только в редактируемом режиме)
         if (isEditable) {
             Button(
-                onClick = { showImageDialog = true }, // Открываем диалог вместо прямой логики
+                onClick = { showImageDialog = true },
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6C5CE7))
             ) {
-                Text("Change Profile Picture", color = Color.White)
+                Text("Изменить фото профиля", color = Color.White)
             }
         }
 
@@ -156,7 +164,7 @@ fun ProfileScreen(
             fontWeight = FontWeight.Medium,
             modifier = Modifier
                 .clickable { showNameDialog = true }
-                .background(Color(0xFFBB86FC), RoundedCornerShape(8.dp))
+                .background(Color(0xFF6C5CE7), RoundedCornerShape(8.dp))
                 .padding(8.dp)
         )
 
@@ -164,7 +172,7 @@ fun ProfileScreen(
         if (showNameDialog) {
             AlertDialog(
                 onDismissRequest = { showNameDialog = false },
-                title = { Text("Edit Profile Name", color = Color.White) },
+                title = { Text("Изменить имя профиля", color = Color.White) },
                 text = {
                     BasicTextField(
                         value = tempName,
@@ -179,7 +187,7 @@ fun ProfileScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            if (tempName.isNotBlank()) { // Проверка на непустое значение
+                            if (tempName.isNotBlank()) {
                                 ProfileName = tempName
                             }
                             tempName = ""
@@ -196,7 +204,7 @@ fun ProfileScreen(
                             showNameDialog = false
                         }
                     ) {
-                        Text("Cancel", color = Color.White)
+                        Text("Отмена", color = Color.White)
                     }
                 },
                 containerColor = Color(0xFF2C2F3E),
@@ -204,8 +212,141 @@ fun ProfileScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
+        // Прокручиваемая часть с текстовыми полями
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f) // Занимает оставшееся пространство
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            item {
+                Text(
+                    text = Level.toString(),
+                    color = Color.White,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Text(
+                    text = "Уровень",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Light,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            item {
+                Text(
+                    text = Score.toString(),
+                    color = Color.White,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Text(
+                    text = "Баллов получено",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Light,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            item {
+                Text(
+                    text = Forecasts.toString(),
+                    color = Color.White,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Text(
+                    text = "Предсказано игр",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Light,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            item {
+                Text(
+                    text = "${(ScorePoints.toFloat() / Forecasts * 100).toInt()}%",
+                    color = Color.White,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Text(
+                    text = "Верно предсказан счет",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Light,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            item {
+                Text(
+                    text = "${(WinnerPoints.toFloat() / Forecasts * 100).toInt()}%",
+                    color = Color.White,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Text(
+                    text = "Верно предсказан победитель",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Light,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            item {
+                Text(
+                    text = Followers.toString(),
+                    color = Color.White,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Text(
+                    text = "Подписчики",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Light,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            item {
+                Text(
+                    text = Following.toString(),
+                    color = Color.White,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Text(
+                    text = "Подписки",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Light,
+                    modifier = Modifier.padding(4.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+        }
         if (state.isVisible) {
             BottomPanel(
                 onCalendar = {
@@ -229,8 +370,9 @@ fun ProfileScreen(
                 state = state
             )
         }
-        }
     }
+}
+
 
 
 @Composable
