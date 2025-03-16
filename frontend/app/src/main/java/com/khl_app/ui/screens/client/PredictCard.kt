@@ -4,7 +4,6 @@ import AuthViewModel
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,7 +55,6 @@ fun PredictCardItem(item: EventPredictionItem, eventId: String, authViewModel: A
             },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Team A column (left)
         Column(
             modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.Start
@@ -88,7 +85,6 @@ fun PredictCardItem(item: EventPredictionItem, eventId: String, authViewModel: A
             }
         }
 
-        // Center column (scores and time)
         Column(
             modifier = Modifier.weight(1.5f),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -128,14 +124,10 @@ fun PredictCardItem(item: EventPredictionItem, eventId: String, authViewModel: A
                 )
             }
 
-            // Display prediction if available
             Log.d("game", item.prediction.toString())
             if (item.prediction != null) {
-                // Определение цвета прогноза
                 val predictionColor = when {
-                    // Если период равен -1 (матч завершен), проверяем правильность прогноза
                     item.period?.toString() == "-1" && item.result != null -> {
-                        // Извлекаем победителей из результата и прогноза
                         val predictionParts = item.prediction.split(":")
                         val resultParts = item.result.split(":")
 
@@ -151,12 +143,9 @@ fun PredictCardItem(item: EventPredictionItem, eventId: String, authViewModel: A
                             else -> "DRAW"
                         }
 
-                        // Определяем цвет в зависимости от правильности прогноза победителя
                         if (predictedWinner == actualWinner) Color.Green else Color.Red
                     }
-                    // Если период равен null (матч не начался), то белый цвет
                     item.period == null -> Color.White
-                    // В остальных случаях (матч начался, но не закончился) фиолетовый цвет
                     else -> Color(0xFF6C5CE7)
                 }
 
@@ -169,7 +158,6 @@ fun PredictCardItem(item: EventPredictionItem, eventId: String, authViewModel: A
                 )
             }
 
-            // Отображаем информацию о периоде, если он есть
             if (item.period != null && item.period.toString() != "-1") {
                 Text(
                     text = "Период: ${item.period}",
@@ -179,7 +167,6 @@ fun PredictCardItem(item: EventPredictionItem, eventId: String, authViewModel: A
                 )
             }
 
-            // If neither prediction nor result is available
             if (item.result == null && item.prediction == null && item.period == null) {
                 Text(
                     text = "Нажмите, чтобы сделать прогноз",
@@ -189,7 +176,6 @@ fun PredictCardItem(item: EventPredictionItem, eventId: String, authViewModel: A
             }
         }
 
-        // Team B column (right)
         Column(
             modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.End
