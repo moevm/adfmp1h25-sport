@@ -27,6 +27,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.khl_app.domain.models.EventPredictionItem
 import com.khl_app.ui.navigation.Screen
+import com.khl_app.ui.screens.AboutPopUp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
@@ -44,6 +45,7 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
     // Объединяем состояния загрузки в одну переменную для предотвращения множественных запросов
     var loadingDirection by remember { mutableStateOf(LoadDirection.NONE) }
     val bottomSheetState = rememberModalBottomSheetState()
+    var aboutState by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -252,6 +254,9 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
                 onProfile = {
                     navHostController.navigate(Screen.ProfileScreen.route)
                 },
+                onAbout = {
+                    aboutState = true
+                },
                 onLogout = {
                     viewModel.logout()
                     navHostController.navigate(Screen.LoginScreen.route) {
@@ -263,6 +268,11 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
                 bottomSheetState,
                 scope
             )
+        }
+        if (aboutState) {
+            AboutPopUp {
+                aboutState = false
+            }
         }
     }
 }

@@ -23,6 +23,6 @@ fun NavGraphBuilder.clientNavigation(navHostController: NavHostController, viewM
     composable(
         route = Screen.TrackableScreen.route
     ){
-        FollowersScreen(viewModel.followersViewModel, navHostController)
+        FollowersScreen(viewModel.followersViewModel, navHostController, viewModel)
     }
 }

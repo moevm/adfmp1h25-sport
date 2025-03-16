@@ -1,5 +1,6 @@
 package com.khl_app.presentation.screens
 
+import MainViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,12 +27,14 @@ import com.khl_app.ui.screens.client.BottomPanel
 import com.khl_app.ui.screens.client.FollowerItem
 import kotlinx.coroutines.launch
 import android.widget.Toast
+import com.khl_app.ui.screens.AboutPopUp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FollowersScreen(
     viewModel: FollowersViewModel,
-    navHostController: NavHostController
+    navHostController: NavHostController,
+    mainModel: MainViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val followers by viewModel.followers.collectAsState()
@@ -39,6 +42,7 @@ fun FollowersScreen(
 
     val bottomSheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
+    var isAboutVisible by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -245,9 +249,25 @@ fun FollowersScreen(
             onProfile = {
                 navHostController.navigate(Screen.ProfileScreen.route)
             },
-            onLogout = {},
+            onAbout = {
+                isAboutVisible = true
+            },
+            onLogout = {
+                mainModel.logout()
+                navHostController.navigate(Screen.LoginScreen.route) {
+                    popUpTo(Screen.ProfileScreen.route) {
+                        inclusive = true
+                    }
+                }
+            },
             bottomSheetState,
             scope
         )
+    }
+
+    if (isAboutVisible) {
+        AboutPopUp {
+            isAboutVisible = false
+        }
     }
 }
