@@ -18,7 +18,7 @@ fun loadUrl(): String {
 }
 
 object ApiClient {
-    private const val BASE_URL = "http://10.0.2.2:6969"
+    private const val BASE_URL = "http://10.0.2.2:5000"
 
     private val gson = GsonBuilder()
         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)

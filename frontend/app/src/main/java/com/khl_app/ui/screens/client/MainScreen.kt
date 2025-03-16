@@ -34,6 +34,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
     val events by viewModel.events.collectAsState()
@@ -42,6 +43,7 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
 
     // Объединяем состояния загрузки в одну переменную для предотвращения множественных запросов
     var loadingDirection by remember { mutableStateOf(LoadDirection.NONE) }
+    val bottomSheetState = rememberModalBottomSheetState()
 
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -148,7 +150,9 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
         TopBar(
             viewModel = viewModel,
             onMenuClick = {
-                navHostController.navigate(Screen.ProfileScreen.route)
+                scope.launch {
+                    bottomSheetState.show()
+                }
             },
             onFilterApplied = {
                 // Перезагружаем события с новыми фильтрами
@@ -238,6 +242,18 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
                     }
                 }
             }
+        }
+        if (bottomSheetState.isVisible) {
+            BottomPanel(
+                onCalendar = {},
+                onTrackable = {},
+                onProfile = {
+                    navHostController.navigate(Screen.ProfileScreen.route)
+                },
+                onLogout = {},
+                bottomSheetState,
+                scope
+            )
         }
     }
 }

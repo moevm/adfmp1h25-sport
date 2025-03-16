@@ -23,12 +23,14 @@ import coil.transform.CircleCropTransformation
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import com.khl_app.ui.navigation.Screen
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 var ProfilePicture = ""
 var ProfileName = "John Doe"
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     viewModel: MainViewModel,
@@ -39,18 +41,24 @@ fun ProfileScreen(
     var showNameDialog by remember { mutableStateOf(false) }
     var tempUrl by remember { mutableStateOf("") } // Временное хранилище для URL в диалоге
     var tempName by remember { mutableStateOf("") }
+    val state = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFF2C2F3E))
             .padding(horizontal = 16.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        //ProfileTopBar(onMenuClick = { navHostController.navigate(Screen.MainScreen.route) })
+        ProfileTopBar(onMenuClick = {
+            scope.launch {
+                state.show()
+            }
+        })
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
         // Фото профиля
         Box(
@@ -197,29 +205,43 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-
+        if (state.isVisible) {
+            BottomPanel(
+                onCalendar = {
+                    navHostController.navigate(Screen.MainScreen.route) {
+                        popUpTo(Screen.ProfileScreen.route) {
+                            inclusive = true
+                        }
+                    }
+                },
+                onProfile = {},
+                onLogout = {},
+                onTrackable = {},
+                scope = scope,
+                state = state
+            )
+        }
         }
     }
 
 
-//@Composable
-//fun ProfileTopBar(onMenuClick: () -> Unit) {
-//    Row(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(horizontal = 10.dp, vertical = 12.dp),
-//        horizontalArrangement = Arrangement.SpaceBetween,
-//        verticalAlignment = Alignment.CenterVertically
-//    ) {
-//        MenuButton(onMenuClick = onMenuClick)
-//        ProfileCenterContent(
-//            modifier = Modifier
-//                .weight(1f)
-//                .padding(horizontal = 20.dp)
-//        )
-//        SettingsButton()
-//    }
-//}
+@Composable
+fun ProfileTopBar(onMenuClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        MenuButton(onMenuClick = onMenuClick)
+        ProfileCenterContent(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 20.dp)
+        )
+    }
+}
 
 @Composable
 fun ProfileCenterContent(modifier: Modifier = Modifier) {
