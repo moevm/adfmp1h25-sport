@@ -26,4 +26,10 @@ class TokenPreferenceRepository(val context: Context) : IRepository<TokenData> {
             pref[stringPreferencesKey("refresh_token")] ?: "",
         )
     }
+
+    override suspend fun deleteInfo() {
+        context.dataStore.edit {
+            it.clear()
+        }
+    }
 }

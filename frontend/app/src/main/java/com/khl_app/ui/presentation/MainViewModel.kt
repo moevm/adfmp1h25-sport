@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val application: Context,
-    tokenCache: IRepository<TokenData>,
+    private val tokenCache: IRepository<TokenData>,
     teamCache: IRepository<TeamData>
 ) : ViewModel() {
 
@@ -84,6 +84,12 @@ class MainViewModel(
     fun loadMoreFutureEvents() {
         viewModelScope.launch {
             eventViewModel.loadMoreFutureEventsSequentially()
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            tokenCache.deleteInfo()
         }
     }
 

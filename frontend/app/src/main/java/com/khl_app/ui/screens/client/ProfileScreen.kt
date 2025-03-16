@@ -215,7 +215,14 @@ fun ProfileScreen(
                     }
                 },
                 onProfile = {},
-                onLogout = {},
+                onLogout = {
+                    viewModel.logout()
+                    navHostController.navigate(Screen.LoginScreen.route) {
+                        popUpTo(Screen.ProfileScreen.route) {
+                            inclusive = true
+                        }
+                    }
+                },
                 onTrackable = {},
                 scope = scope,
                 state = state
