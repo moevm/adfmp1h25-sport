@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -96,7 +95,6 @@ fun ProfileScreen(
         }
     }
 
-    // Trigger loading of followers when the screen is first displayed
     LaunchedEffect(key1 = Unit) {
         followersViewModel.loadFollowers()
     }
@@ -263,10 +261,9 @@ fun ProfileContent(
     val nextLevelPoints = if (level.number < 4) {
         LevelSystem.levels.find { it.number == level.number + 1 }?.minPoints ?: (level.minPoints + 1000)
     } else {
-        level.minPoints + 1000 // For max level, just add 1000 points as the next milestone
+        level.minPoints + 1000
     }
 
-    // Calculate points needed for next level
     val pointsForCurrentLevel = points - level.minPoints
     val totalPointsNeededForNextLevel = nextLevelPoints - level.minPoints
     val progressPercentage = if (totalPointsNeededForNextLevel > 0) {
@@ -275,11 +272,9 @@ fun ProfileContent(
         1f
     }
 
-    // Для выбора аватара
     val context = LocalContext.current
     var showUploadMessage by remember { mutableStateOf(false) }
 
-    // Для выбора изображения из галереи
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -296,12 +291,10 @@ fun ProfileContent(
         }
     }
 
-    // Profile Avatar and Username
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(top = 16.dp)
     ) {
-        // Avatar with selection capability only if isYou
         Box(
             modifier = Modifier
                 .size(120.dp)
@@ -352,7 +345,6 @@ fun ProfileContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Username
         Text(
             text = userData.name,
             color = Color.White,
@@ -362,7 +354,6 @@ fun ProfileContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Stats Row 1
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -380,7 +371,6 @@ fun ProfileContent(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Stats Row 2
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -416,14 +406,12 @@ fun ProfileContent(
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        // Level Indicator
         LevelProgressBar(
             currentPoints = points,
             progressPercentage = progressPercentage
         )
     }
 
-    // Upload message snackbar
     if (showUploadMessage) {
         Box(
             modifier = Modifier
@@ -535,7 +523,6 @@ fun LevelProgressBar(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Progress bar
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -553,7 +540,6 @@ fun LevelProgressBar(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Point milestones
         Row(
             modifier = Modifier
                 .fillMaxWidth()
