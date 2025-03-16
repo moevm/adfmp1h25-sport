@@ -273,7 +273,7 @@ fun MainScreen(
                     scope.launch {
                         val tokenData = viewModel.tokenCache.getInfo().first() // Use first() to get single value
                         navHostController.navigate(Screen.ProfileScreen.createRoute(
-                            userId = getUserIdFromToken(tokenData.accessToken) // Using the imported function to get ID
+                            userId = getUserIdFromToken(tokenData.accessToken), isYou = true// Using the imported function to get ID
                         ))
                     }
                 },

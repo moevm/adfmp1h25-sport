@@ -249,11 +249,6 @@ fun ProfileCenterContent(modifier: Modifier = Modifier) {
             fontWeight = FontWeight.Medium,
             color = Color.White
         )
-        Text(
-            text = "сегодня: $date",
-            fontSize = 18.sp,
-            color = Color.White.copy(alpha = 0.7f)
-        )
     }
 }
 

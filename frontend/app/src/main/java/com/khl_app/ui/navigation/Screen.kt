@@ -20,9 +20,9 @@ sealed class Screen(val route: String) {
     object AboutScreen: Screen(ROUTER_ABOUT)
 
     // Для экранов с аргументами добавляем базовые маршруты и функции для создания полного маршрута
-    object ProfileScreen: Screen("$ROUTER_PROFILE?userId={userId}&isFromMenu={isFromMenu}") {
-        fun createRoute(userId: String? = null, isFromMenu: Boolean = true): String {
-            return "$ROUTER_PROFILE?userId=$userId&isFromMenu=$isFromMenu"
+    object ProfileScreen: Screen("$ROUTER_PROFILE?userId={userId}&isFromMenu={isFromMenu}&isYou={isYou}") {
+        fun createRoute(userId: String? = null, isFromMenu: Boolean = true, isYou: Boolean = false): String {
+            return "$ROUTER_PROFILE?userId=$userId&isFromMenu=$isFromMenu&isYou=$isYou"
         }
     }
 

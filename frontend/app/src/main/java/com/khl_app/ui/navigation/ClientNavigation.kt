@@ -53,11 +53,15 @@ fun NavGraphBuilder.clientNavigation(navHostController: NavHostController, viewM
             navArgument("isFromMenu") {
                 type = NavType.BoolType
                 defaultValue = true
+            },navArgument("isYou") {
+                type = NavType.BoolType
+                defaultValue = false
             }
         )
     ) { backStackEntry ->
         val userId = backStackEntry.arguments?.getString("userId")
         val isFromMenu = backStackEntry.arguments?.getBoolean("isFromMenu") ?: true
+        val isYoy = backStackEntry.arguments?.getBoolean("isYou") ?: false
 
         ProfileScreen(
             viewModel = viewModel,
@@ -65,6 +69,7 @@ fun NavGraphBuilder.clientNavigation(navHostController: NavHostController, viewM
             navHostController = navHostController,
             userId = userId,
             isFromMenu = isFromMenu,
+            isYou = isYoy
         )
     }
 

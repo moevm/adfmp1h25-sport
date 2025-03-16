@@ -241,6 +241,7 @@ fun FollowersScreen(
                                         navHostController.navigate(Screen.ProfileScreen.createRoute(
                                             userId = follower.id,
                                             isFromMenu = false,
+                                            isYou = follower.name == "nick"
                                         ))
                                     },
                                     isYou = follower.id == ownUserId
@@ -274,6 +275,7 @@ fun FollowersScreen(
                     val tokenData = mainViewModel.tokenCache.getInfo().first()
                     navHostController.navigate(Screen.ProfileScreen.createRoute(
                         userId = getUserIdFromToken(tokenData.accessToken),
+                        isYou = true
                     ))
                 }
             },
@@ -283,7 +285,7 @@ fun FollowersScreen(
             onLogout = {
                 mainModel.logout()
                 navHostController.navigate(Screen.LoginScreen.route) {
-                    popUpTo(Screen.ProfileScreen.route) {
+                    popUpTo(Screen.ProfileScreen.createRoute(isYou = true)) {
                         inclusive = true
                     }
                 }
