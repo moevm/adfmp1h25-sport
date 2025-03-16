@@ -1,7 +1,6 @@
 package com.khl_app.ui.presentation
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
