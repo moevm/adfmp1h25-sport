@@ -1,6 +1,8 @@
 // AuthViewModel.kt
+import android.util.Log
 import com.khl_app.domain.ApiClient
 import com.khl_app.domain.storage.IRepository
+import com.khl_app.storage.getUserIdFromToken
 import com.khl_app.storage.models.TokenData
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Dispatchers
