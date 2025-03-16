@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val application: Context,
-    private val tokenCache: IRepository<TokenData>,
+    public val tokenCache: IRepository<TokenData>,
     teamCache: IRepository<TeamData>
 ) : ViewModel() {
 

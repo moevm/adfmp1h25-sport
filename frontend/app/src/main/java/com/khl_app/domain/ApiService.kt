@@ -61,15 +61,21 @@ interface ApiService {
         @Query("event") eventId: String
     ): Response<String>
 
-    @GET("followers/subscribe")
+    @POST("followers/subscribe")
     suspend fun subscribe(
         @Header("Authorization") token: String,
         @Query("user_id") userId: String,
     ): Response<String>
 
-    @GET("followers/unsubscribe")
+    @POST("followers/unsubscribe")
     suspend fun unsubscribe(
         @Header("Authorization") token: String,
         @Query("user_id") userId: String,
+    ): Response<String>
+
+    @POST("followers/set_avatar")
+    suspend fun setAvatar(
+        @Header("Authorization") token: String,
+        @Query("avatar") avatar: String
     ): Response<String>
 }

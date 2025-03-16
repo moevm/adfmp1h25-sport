@@ -50,7 +50,8 @@ class EventViewModel(
     }
 
     // Метод для установки ID пользователя
-    fun setUserId(id: String) {
+    fun setUserId(id: String?) {
+        if(id == null) return
         _userId.value = id.ifEmpty { "current" }
         Log.d("EventsViewModel", "User ID set to: ${_userId.value}")
     }

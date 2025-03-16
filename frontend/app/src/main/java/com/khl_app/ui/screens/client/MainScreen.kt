@@ -2,6 +2,7 @@ package com.khl_app.ui.screens.client
 
 import AuthViewModel
 import MainViewModel
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
@@ -26,10 +28,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.khl_app.domain.models.EventPredictionItem
+import com.khl_app.storage.getUserIdFromToken
 import com.khl_app.ui.navigation.Screen
 import com.khl_app.ui.screens.AboutPopUp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -37,7 +41,13 @@ import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
+fun MainScreen(
+    viewModel: MainViewModel,
+    navHostController: NavHostController,
+    isFromMenu: Boolean = true,
+    name: String? = null,
+    canRedact: Boolean = true
+) {
     val events by viewModel.events.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
@@ -49,6 +59,7 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
 
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
+
 
     // Сохраняем индекс отображаемого элемента перед загрузкой новых элементов
     var initialItemIndex by remember { mutableStateOf(0) }
@@ -152,8 +163,12 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
         TopBar(
             viewModel = viewModel,
             onMenuClick = {
-                scope.launch {
-                    bottomSheetState.show()
+                if(isFromMenu) {
+                    scope.launch {
+                        bottomSheetState.show()
+                    }
+                } else {
+                    navHostController.navigate(Screen.TrackableScreen.route)
                 }
             },
             onFilterApplied = {
@@ -162,7 +177,9 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
                     loadingDirection = LoadDirection.NONE
                     viewModel.loadEvents()
                 }
-            }
+            },
+            name = name,
+            isFromMenu = isFromMenu
         )
 
         // Навигационные кнопки
@@ -224,7 +241,8 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
                             events = events,
                             listState = listState,
                             authViewModel = viewModel.authViewModel,
-                            onPredictionMade = { viewModel.loadEvents() }  // Перезагружаем события после прогноза
+                            onPredictionMade = { viewModel.loadEvents() },
+                            canRedact = canRedact// Перезагружаем события после прогноза
                         )
                     }
 
@@ -252,7 +270,12 @@ fun MainScreen(viewModel: MainViewModel, navHostController: NavHostController) {
                     navHostController.navigate(Screen.TrackableScreen.route)
                 },
                 onProfile = {
-                    navHostController.navigate(Screen.ProfileScreen.route)
+                    scope.launch {
+                        val tokenData = viewModel.tokenCache.getInfo().first() // Use first() to get single value
+                        navHostController.navigate(Screen.ProfileScreen.createRoute(
+                            userId = getUserIdFromToken(tokenData.accessToken) // Using the imported function to get ID
+                        ))
+                    }
                 },
                 onAbout = {
                     aboutState = true
@@ -434,7 +457,9 @@ fun NavigationButtons(
 fun TopBar(
     viewModel: MainViewModel,
     onMenuClick: () -> Unit,
-    onFilterApplied: () -> Unit
+    onFilterApplied: () -> Unit,
+    name: String?,
+    isFromMenu: Boolean
 ) {
     Row(
         modifier = Modifier
@@ -443,11 +468,12 @@ fun TopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        MenuButton(onMenuClick = onMenuClick)
+        MenuButton(isFromMenu = isFromMenu, onMenuClick = onMenuClick)
         CenterContent(
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 20.dp),
+            name = name
         )
         SettingsButton(
             mainViewModel = viewModel,
@@ -457,7 +483,7 @@ fun TopBar(
 }
 
 @Composable
-fun CenterContent(modifier: Modifier = Modifier) {
+fun CenterContent(modifier: Modifier = Modifier, name: String?) {
     val firstApiFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy")
     val date = LocalDate.now().format(firstApiFormat)
 
@@ -467,7 +493,7 @@ fun CenterContent(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Календарь",
+            text = if (name != null && name != "{name}") "Календарь $name" else "Календарь",
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
             color = Color.White // Замените цвет текста, если нужно, под новый фон
@@ -481,14 +507,23 @@ fun CenterContent(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun MenuButton(onMenuClick: () -> Unit) {
+private fun MenuButton(isFromMenu: Boolean, onMenuClick: () -> Unit) {
     IconButton(onClick = onMenuClick) {
-        Icon(
-            Icons.Rounded.Menu,
-            contentDescription = "Menu Button",
-            modifier = Modifier.size(28.dp),
-            tint = Color.White
-        )
+        if (isFromMenu) {
+            Icon(
+                Icons.Rounded.Menu,
+                contentDescription = "Menu Button",
+                modifier = Modifier.size(28.dp),
+                tint = Color.White
+            )
+        } else {
+            Icon(
+                Icons.AutoMirrored.Rounded.ArrowBack,
+                contentDescription = "Back Button",
+                modifier = Modifier.size(28.dp),
+                tint = Color.White
+            )
+        }
     }
 }
 
@@ -578,7 +613,8 @@ fun MatchList(
     events: List<EventPredictionItem>,
     listState: LazyListState,
     authViewModel: AuthViewModel,
-    onPredictionMade: () -> Unit
+    onPredictionMade: () -> Unit,
+    canRedact: Boolean
 ) {
     // Группируем события по дате и сортируем в обратном хронологическом порядке (новые вверху)
     val groupItems = events.groupBy { it.date }
@@ -630,7 +666,8 @@ fun MatchList(
                     item = card,
                     eventId = card.id.toString(),
                     authViewModel = authViewModel,
-                    onPredictionMade = onPredictionMade
+                    onPredictionMade = onPredictionMade,
+                    canRedact = canRedact
                 )
             }
         }

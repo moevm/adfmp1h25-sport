@@ -6,6 +6,7 @@ data class FollowerResponse(
     val id: String,
     val level: Int,
     val name: String,
+    val avatar: String?,
     val points: Int,
     val stats: FollowerStats
 )

@@ -1,6 +1,9 @@
 package com.khl_app.presentation.screens
 
 import MainViewModel
+import android.app.Activity
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,13 +29,15 @@ import com.khl_app.ui.presentation.SubscriptionState
 import com.khl_app.ui.screens.client.BottomPanel
 import com.khl_app.ui.screens.client.FollowerItem
 import kotlinx.coroutines.launch
-import android.widget.Toast
+import com.khl_app.storage.getUserIdFromToken
 import com.khl_app.ui.screens.AboutPopUp
+import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FollowersScreen(
     viewModel: FollowersViewModel,
+    mainViewModel: MainViewModel,
     navHostController: NavHostController,
     mainModel: MainViewModel
 ) {
@@ -48,6 +53,14 @@ fun FollowersScreen(
 
     var showSubscribeDialog by remember { mutableStateOf(false) }
     var userIdInput by remember { mutableStateOf("") }
+    var ownUserId by remember { mutableStateOf("") }
+
+    // Получение ID пользователя для определения своего профиля
+    LaunchedEffect(Unit) {
+        mainViewModel.tokenCache.getInfo().collect { tokenData ->
+            ownUserId = getUserIdFromToken(tokenData.accessToken)!!
+        }
+    }
 
     LaunchedEffect(subscriptionState) {
         when (subscriptionState) {
@@ -142,6 +155,7 @@ fun FollowersScreen(
                     }
                 },
                 actions = {
+                    // Кнопка добавления подписки
                     IconButton(onClick = { showSubscribeDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Add,
@@ -150,7 +164,7 @@ fun FollowersScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1E1E1E),
+                    containerColor = Color.Transparent,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White,
                     actionIconContentColor = Color.White
@@ -219,8 +233,17 @@ fun FollowersScreen(
                             items(followers) { follower ->
                                 FollowerItem(
                                     follower = follower,
-                                    onMessageClick = { {  } },
-                                    onDeleteClick = { viewModel.removeFollower(it) }
+                                    onMessageClick = {
+                                        navHostController.navigate(Screen.MainScreen.createRoute(canRedact = false, isFromMenu = false, name = follower.name))
+                                    },
+                                    onDeleteClick = { viewModel.removeFollower(it) },
+                                    onItemClick = {
+                                        navHostController.navigate(Screen.ProfileScreen.createRoute(
+                                            userId = follower.id,
+                                            isFromMenu = false,
+                                        ))
+                                    },
+                                    isYou = follower.id == ownUserId
                                 )
                             }
                         }
@@ -247,7 +270,12 @@ fun FollowersScreen(
             onCalendar = { navHostController.navigate(Screen.MainScreen.route) },
             onTrackable = {},
             onProfile = {
-                navHostController.navigate(Screen.ProfileScreen.route)
+                scope.launch {
+                    val tokenData = mainViewModel.tokenCache.getInfo().first()
+                    navHostController.navigate(Screen.ProfileScreen.createRoute(
+                        userId = getUserIdFromToken(tokenData.accessToken),
+                    ))
+                }
             },
             onAbout = {
                 isAboutVisible = true
@@ -260,8 +288,8 @@ fun FollowersScreen(
                     }
                 }
             },
-            bottomSheetState,
-            scope
+            state = bottomSheetState,
+            scope = scope
         )
     }
 

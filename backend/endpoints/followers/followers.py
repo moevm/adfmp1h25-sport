@@ -70,3 +70,14 @@ def unsubscribe(user_id):
             return "ok"
         return {"message": "not subscribed to this user"}, 400
     return {"message": "cant find users followers"}, 404
+
+
+@followers_bp.route('/set_avatar', methods=['POST'])
+@get_user_id
+def set_avatar(user_id):
+    avatar = request.args.get("avatar")
+    USERS_ENTRY_CL.update_one(
+        {"_id": ObjectId(user_id)}, 
+        {"$set": {"avatar": avatar}}
+    )
+    return "ok"

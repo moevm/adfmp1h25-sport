@@ -1,5 +1,8 @@
 package com.khl_app.ui.presentation
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.khl_app.domain.ApiService
@@ -9,8 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 
-class FollowersViewModel (
+class FollowersViewModel(
     private val apiService: ApiService,
     private val tokenRepository: com.khl_app.domain.storage.IRepository<TokenData>
 ) : ViewModel() {
@@ -23,6 +27,9 @@ class FollowersViewModel (
 
     private val _subscriptionState = MutableStateFlow<SubscriptionState>(SubscriptionState.Idle)
     val subscriptionState: StateFlow<SubscriptionState> = _subscriptionState.asStateFlow()
+
+    private val _avatarState = MutableStateFlow<AvatarState>(AvatarState.Idle)
+    val avatarState: StateFlow<AvatarState> = _avatarState.asStateFlow()
 
     init {
         loadFollowers()
@@ -101,8 +108,50 @@ class FollowersViewModel (
         }
     }
 
+    // Метод для сжатия изображения до 100x100
+    private fun compressBitmap(bitmap: Bitmap): String {
+        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, 100, 100, true)
+        val outputStream = ByteArrayOutputStream()
+        scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+        val byteArray = outputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.DEFAULT)
+    }
+
+    // Метод для установки аватара
+    fun setAvatar(bitmap: Bitmap) {
+        viewModelScope.launch {
+            _avatarState.value = AvatarState.Loading
+            try {
+                tokenRepository.getInfo().collect { tokenData ->
+                    val accessToken = tokenData.accessToken
+                    if (accessToken.isNotEmpty()) {
+                        // Сжимаем и конвертируем изображение в base64
+                        val base64Avatar = compressBitmap(bitmap)
+
+                        // Отправляем на сервер
+                        val response = apiService.setAvatar("Bearer $accessToken", base64Avatar)
+                        if (response.isSuccessful) {
+                            _avatarState.value = AvatarState.Success("Аватар успешно установлен")
+                            loadFollowers() // Обновляем список, чтобы получить свой обновленный аватар
+                        } else {
+                            _avatarState.value = AvatarState.Error("Ошибка установки аватара: ${response.code()}")
+                        }
+                    } else {
+                        _avatarState.value = AvatarState.Error("Токен авторизации отсутствует")
+                    }
+                }
+            } catch (e: Exception) {
+                _avatarState.value = AvatarState.Error("Ошибка: ${e.message}")
+            }
+        }
+    }
+
     fun resetSubscriptionState() {
         _subscriptionState.value = SubscriptionState.Idle
+    }
+
+    fun resetAvatarState() {
+        _avatarState.value = AvatarState.Idle
     }
 }
 
@@ -117,4 +166,11 @@ sealed class SubscriptionState {
     object Loading : SubscriptionState()
     data class Success(val message: String) : SubscriptionState()
     data class Error(val message: String) : SubscriptionState()
+}
+
+sealed class AvatarState {
+    object Idle : AvatarState()
+    object Loading : AvatarState()
+    data class Success(val message: String) : AvatarState()
+    data class Error(val message: String) : AvatarState()
 }

@@ -1,8 +1,15 @@
 package com.khl_app.ui.screens.client
 
 import MainViewModel
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,365 +21,141 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import com.khl_app.ui.screens.AboutPopUp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
-import coil.transform.CircleCropTransformation
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
+import com.khl_app.domain.models.FollowerResponse
+import com.khl_app.domain.models.LevelSystem
 import com.khl_app.ui.navigation.Screen
+import com.khl_app.ui.presentation.FollowersUiState
+import com.khl_app.ui.presentation.FollowersViewModel
+import com.khl_app.ui.screens.AboutPopUp
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
-var ProfilePicture = ""
-var ProfileName = "John Doe"
-var Level = 1
-var Score = 1
-var Forecasts = 1
-var Following = 1
-var Followers = 1
-var WinnerPoints = 1
-var ScorePoints = 1
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     viewModel: MainViewModel,
+    followersViewModel: FollowersViewModel,
     navHostController: NavHostController,
-    isEditable: Boolean = false
+    userId: String? = null,
+    isFromMenu: Boolean = true,
+    isYou: Boolean = true
 ) {
-    var showImageDialog by remember { mutableStateOf(false) } // Состояние для отображения диалога
-    var showNameDialog by remember { mutableStateOf(false) }
-    var tempUrl by remember { mutableStateOf("") } // Временное хранилище для URL в диалоге
-    var tempName by remember { mutableStateOf("") }
     val state = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var aboutIsVisible by remember { mutableStateOf(false) }
 
-    Column(
+    // Collect states from viewModel
+    val followersUiState by followersViewModel.uiState.collectAsState()
+    val followersList by followersViewModel.followers.collectAsState()
+
+    // Get user data
+    var userData by remember { mutableStateOf<FollowerResponse?>(null) }
+
+    // Load user data based on userId
+    LaunchedEffect(key1 = userId, key2 = followersList) {
+        if (userId != null) {
+            userData = followersList.find { it.id == userId }
+        } else {
+            if (followersList.isNotEmpty()) {
+                userData = followersList.first()
+            }
+        }
+    }
+
+    // Trigger loading of followers when the screen is first displayed
+    LaunchedEffect(key1 = Unit) {
+        followersViewModel.loadFollowers()
+    }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFF2C2F3E))
-            .padding(horizontal = 16.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ProfileTopBar(onMenuClick = {
-            scope.launch {
-                state.show()
-            }
-        })
-
-        Spacer(modifier = Modifier.height(30.dp))
-
-        // Фото профиля
-        Box(
+        Column(
             modifier = Modifier
-                .size(240.dp)
-                .clip(CircleShape)
-                .background(Color.DarkGray.copy(alpha = 0.3f))
-                .clickable { showImageDialog = true },
-            contentAlignment = Alignment.Center
-        ) {
-            if (ProfilePicture != "") {
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(ProfilePicture)
-                            .crossfade(true)
-                            .transformations(CircleCropTransformation())
-                            .build()
-                    ),
-                    contentDescription = "Фото профиля",
-                    modifier = Modifier.size(120.dp)
-                )
-            } else {
-                Text(
-                    text = "Добавить фото",
-                    color = Color.White,
-                    fontSize = 16.sp
-                )
-            }
-        }
-
-        // Диалог для ввода URL
-        if (showImageDialog) {
-            AlertDialog(
-                onDismissRequest = { showImageDialog = false },
-                title = { Text("Вставьте ссылку...", color = Color.White) },
-                text = {
-                    BasicTextField(
-                        value = tempUrl,
-                        onValueChange = { tempUrl = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color(0xFF1D1F2B), RoundedCornerShape(8.dp))
-                            .padding(8.dp),
-                        textStyle = LocalTextStyle.current.copy(color = Color.White, fontSize = 16.sp)
-                    )
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            ProfilePicture = tempUrl
-                            tempUrl = ""
-                            showImageDialog = false
-                        }
-                    ) {
-                        Text("OK", color = Color(0xFF6C5CE7))
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = {
-                            tempUrl = ""
-                            showImageDialog = false
-                        }
-                    ) {
-                        Text("Отмена", color = Color.White)
-                    }
-                },
-                containerColor = Color(0xFF2C2F3E),
-                textContentColor = Color.White
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Кнопка для смены фото (доступна только в редактируемом режиме)
-        if (isEditable) {
-            Button(
-                onClick = { showImageDialog = true },
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6C5CE7))
-            ) {
-                Text("Изменить фото профиля", color = Color.White)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Кликабельное имя
-        Text(
-            text = ProfileName,
-            color = Color.White,
-            fontSize = 48.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier
-                .clickable { showNameDialog = true }
-                .background(Color(0xFF6C5CE7), RoundedCornerShape(8.dp))
-                .padding(8.dp)
-        )
-
-        // Диалог для ввода имени
-        if (showNameDialog) {
-            AlertDialog(
-                onDismissRequest = { showNameDialog = false },
-                title = { Text("Изменить имя профиля", color = Color.White) },
-                text = {
-                    BasicTextField(
-                        value = tempName,
-                        onValueChange = { tempName = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color(0xFF1D1F2B), RoundedCornerShape(8.dp))
-                            .padding(8.dp),
-                        textStyle = LocalTextStyle.current.copy(color = Color.White, fontSize = 16.sp)
-                    )
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            if (tempName.isNotBlank()) {
-                                ProfileName = tempName
-                            }
-                            tempName = ""
-                            showNameDialog = false
-                        }
-                    ) {
-                        Text("OK", color = Color(0xFF6C5CE7))
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = {
-                            tempName = ""
-                            showNameDialog = false
-                        }
-                    ) {
-                        Text("Отмена", color = Color.White)
-                    }
-                },
-                containerColor = Color(0xFF2C2F3E),
-                textContentColor = Color.White
-            )
-        }
-
-        Spacer(modifier = Modifier.height(30.dp))
-
-        // Прокручиваемая часть с текстовыми полями
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f) // Занимает оставшееся пространство
-                .fillMaxWidth(),
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item {
-                Text(
-                    text = Level.toString(),
-                    color = Color.White,
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Text(
-                    text = "Уровень",
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Light,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            item {
-                Text(
-                    text = Score.toString(),
-                    color = Color.White,
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Text(
-                    text = "Баллов получено",
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Light,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            item {
-                Text(
-                    text = Forecasts.toString(),
-                    color = Color.White,
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Text(
-                    text = "Предсказано игр",
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Light,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            item {
-                Text(
-                    text = "${(ScorePoints.toFloat() / Forecasts * 100).toInt()}%",
-                    color = Color.White,
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Text(
-                    text = "Верно предсказан счет",
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Light,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            item {
-                Text(
-                    text = "${(WinnerPoints.toFloat() / Forecasts * 100).toInt()}%",
-                    color = Color.White,
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Text(
-                    text = "Верно предсказан победитель",
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Light,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            item {
-                Text(
-                    text = Followers.toString(),
-                    color = Color.White,
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Text(
-                    text = "Подписчики",
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Light,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            item {
-                Text(
-                    text = Following.toString(),
-                    color = Color.White,
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Text(
-                    text = "Подписки",
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Light,
-                    modifier = Modifier.padding(4.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
+            TopBar(
+                isFromMenu = isFromMenu,
+                onMenuClick = {
+                    scope.launch {
+                        state.show()
+                    }
+                },
+                onBackClick = {
+                    navHostController.popBackStack()
+                }
+            )
+            when (followersUiState) {
+                is FollowersUiState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .align(Alignment.CenterHorizontally)
+                            .padding(top = 120.dp),
+                        color = Color(0xFF6C5CE7)
+                    )
+                }
+                is FollowersUiState.Error -> {
+                    Text(
+                        text = "Ошибка загрузки данных",
+                        color = Color.Red,
+                        fontSize = 22.sp,
+                        modifier = Modifier.padding(top = 120.dp)
+                    )
+                }
+                is FollowersUiState.Success -> {
+                    if (userData != null) {
+                        ProfileContent(userData!!, isYou, followersViewModel)
+                    } else {
+                        Text(
+                            text = "Пользователь не найден",
+                            color = Color.White,
+                            fontSize = 22.sp,
+                            modifier = Modifier.padding(top = 120.dp)
+                        )
+                    }
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        
         if (state.isVisible) {
             BottomPanel(
                 onCalendar = {
@@ -401,6 +184,7 @@ fun ProfileScreen(
                 state = state
             )
         }
+
         if (aboutIsVisible) {
             AboutPopUp {
                 aboutIsVisible = false
@@ -409,9 +193,8 @@ fun ProfileScreen(
     }
 }
 
-
 @Composable
-fun ProfileTopBar(onMenuClick: () -> Unit) {
+fun TopBar(isFromMenu: Boolean, onMenuClick: () -> Unit, onBackClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -419,11 +202,33 @@ fun ProfileTopBar(onMenuClick: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        MenuButton(onMenuClick = onMenuClick)
+        if (isFromMenu) {
+            MenuButton(onMenuClick = onMenuClick, isFromMenu = isFromMenu)
+        } else {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Назад",
+                    tint = Color.White
+                )
+            }
+        }
+
         ProfileCenterContent(
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 20.dp)
+        )
+    }
+}
+
+@Composable
+private fun MenuButton(onMenuClick: () -> Unit, isFromMenu: Boolean) {
+    IconButton(onClick = onMenuClick) {
+        Icon(
+            imageVector = Icons.Default.Menu,
+            contentDescription = "Меню",
+            tint = Color.White
         )
     }
 }
@@ -440,14 +245,349 @@ fun ProfileCenterContent(modifier: Modifier = Modifier) {
     ) {
         Text(
             text = "Профиль",
-            fontSize = 20.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Medium,
             color = Color.White
         )
         Text(
             text = "сегодня: $date",
-            fontSize = 14.sp,
+            fontSize = 18.sp,
             color = Color.White.copy(alpha = 0.7f)
         )
+    }
+}
+
+@Composable
+fun ProfileContent(
+    userData: FollowerResponse,
+    isYou: Boolean,
+    viewModel: FollowersViewModel
+) {
+    val points = userData.points
+    val level = LevelSystem.getLevelForPoints(points)
+    val nextLevelPoints = if (level.number < 4) {
+        LevelSystem.levels.find { it.number == level.number + 1 }?.minPoints ?: (level.minPoints + 1000)
+    } else {
+        level.minPoints + 1000 // For max level, just add 1000 points as the next milestone
+    }
+
+    // Calculate points needed for next level
+    val pointsForCurrentLevel = points - level.minPoints
+    val totalPointsNeededForNextLevel = nextLevelPoints - level.minPoints
+    val progressPercentage = if (totalPointsNeededForNextLevel > 0) {
+        pointsForCurrentLevel.toFloat() / totalPointsNeededForNextLevel
+    } else {
+        1f
+    }
+
+    // Для выбора аватара
+    val context = LocalContext.current
+    var showUploadMessage by remember { mutableStateOf(false) }
+
+    // Для выбора изображения из галереи
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null && isYou) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+                viewModel.setAvatar(bitmap)
+                showUploadMessage = true
+            } catch (e: Exception) {
+                Toast.makeText(context, "Ошибка загрузки изображения: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // Profile Avatar and Username
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(top = 16.dp)
+    ) {
+        // Avatar with selection capability only if isYou
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .border(3.dp, LevelSystem.getAvatarBorderColor(points), CircleShape)
+                .background(Color.DarkGray)
+                .then(
+                    if (isYou) Modifier.clickable {
+                        imagePickerLauncher.launch("image/*")
+                    } else Modifier
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (userData.avatar != null && userData.avatar.isNotEmpty()) {
+                val avatarBitmap = remember(userData.avatar) {
+                    try {
+                        val imageBytes = Base64.decode(userData.avatar, Base64.DEFAULT)
+                        BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size).asImageBitmap()
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+
+                if (avatarBitmap != null) {
+                    Image(
+                        bitmap = avatarBitmap,
+                        contentDescription = "Аватар пользователя",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Text(
+                        text = userData.name.first().toString(),
+                        color = Color.White,
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            } else {
+                Text(
+                    text = userData.name.first().toString(),
+                    color = Color.White,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Username
+        Text(
+            text = userData.name,
+            color = Color.White,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Stats Row 1
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            StatItem(
+                value = userData.points.toString(),
+                label = "Баллов получено"
+            )
+
+            StatItem(
+                value = userData.stats.predictedGames.toString(),
+                label = "Предсказано игр"
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Stats Row 2
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            StatItem(
+                value = "${(userData.stats.winnerPoints.toFloat() / userData.stats.predictedGames.toFloat() * 100).toInt()}%",
+                label = "Верно угадан\nПобедитель"
+            )
+
+            StatItem(
+                value = "${(userData.stats.scorePoints.toFloat() / userData.stats.predictedGames.toFloat() * 100).toInt()}%",
+                label = "Верность счета"
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Stats Row 3
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            StatItem(
+                value = userData.stats.followersCount.toString(),
+                label = "Отслеживают"
+            )
+
+            StatItem(
+                value = userData.stats.followingCount.toString(),
+                label = "Отслеживает"
+            )
+        }
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        // Level Indicator
+        LevelProgressBar(
+            currentPoints = points,
+            progressPercentage = progressPercentage
+        )
+    }
+
+    // Upload message snackbar
+    if (showUploadMessage) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 16.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Snackbar(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "Аватар успешно загружен",
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
+            }
+
+            LaunchedEffect(key1 = showUploadMessage) {
+                kotlinx.coroutines.delay(3000)
+                showUploadMessage = false
+            }
+        }
+    }
+}
+
+@Composable
+fun StatItem(value: String, label: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = value,
+            color = Color.White,
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.7f),
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun LevelProgressBar(
+    currentPoints: Int,
+    progressPercentage: Float
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Level text
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "${LevelSystem.getLevelNumber(currentPoints)}",
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = " уровень",
+                color = Color.White,
+                fontSize = 20.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Level milestones
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "0",
+                color = Color.White,
+                fontSize = 16.sp
+            )
+
+            Text(
+                text = "1 ур",
+                color = Color.White,
+                fontSize = 16.sp
+            )
+
+            Text(
+                text = "2 ур",
+                color = Color.White,
+                fontSize = 16.sp
+            )
+
+            Text(
+                text = "3 ур",
+                color = Color.White,
+                fontSize = 16.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Progress bar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(12.dp)
+                .padding(horizontal = 16.dp)
+                .background(Color.DarkGray.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(progressPercentage)
+                    .height(12.dp)
+                    .background(Color.Green, RoundedCornerShape(6.dp))
+            )
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Point milestones
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "0 pt",
+                color = Color.White,
+                fontSize = 16.sp
+            )
+
+            Text(
+                text = "100 pt",
+                color = Color.White,
+                fontSize = 16.sp
+            )
+
+            Text(
+                text = "500 pt",
+                color = Color.White,
+                fontSize = 16.sp
+            )
+
+            Text(
+                text = "1000 pt",
+                color = Color.White,
+                fontSize = 16.sp
+            )
+        }
     }
 }

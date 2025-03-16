@@ -36,7 +36,7 @@ import coil.transform.CircleCropTransformation
 import com.khl_app.domain.models.EventPredictionItem
 
 @Composable
-fun PredictCardItem(item: EventPredictionItem, eventId: String, authViewModel: AuthViewModel, onPredictionMade: () -> Unit) {
+fun PredictCardItem(item: EventPredictionItem, eventId: String, authViewModel: AuthViewModel, onPredictionMade: () -> Unit, canRedact: Boolean) {
     val context = LocalContext.current
     var showPredictDialog by remember { mutableStateOf(false) }
 
@@ -46,7 +46,10 @@ fun PredictCardItem(item: EventPredictionItem, eventId: String, authViewModel: A
             .wrapContentHeight()
             .padding(vertical = 8.dp, horizontal = 16.dp)
             .clickable {
-                if (item.period == null) {
+                if(!canRedact){
+                    Toast.makeText(context, "Не ваш календарь", Toast.LENGTH_SHORT).show()
+                }
+                else if (item.period == null) {
                     showPredictDialog = true
                 } else {
                     Toast.makeText(context, "Матч уже начался", Toast.LENGTH_SHORT).show()

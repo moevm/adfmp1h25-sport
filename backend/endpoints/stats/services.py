@@ -43,12 +43,15 @@ def get_users_stats(users_ids):
         user_stat = next((stat for stat in stats if stat['_id'] == user_id), None)
         user_name = next((name for name in names if name['_id'] == user_id), None)
 
+        avatar = user_name.get('avatar') if user_name else None
+
         if user_stat and user_name:
             cur_stats = UserStats.from_json(user_stat)
             points = cur_stats.winner_points + cur_stats.score_points
             res.append({
                 'id': str(user_id),
                 'name': user_name['login'],
+                'avatar': avatar,
                 'stats': UserStats.from_json(user_stat).to_json(),
                 'level': get_user_level(points),
                 'points': points

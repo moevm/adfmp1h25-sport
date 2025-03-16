@@ -1,6 +1,6 @@
 package com.khl_app.ui.navigation
 
-sealed class Screen(val route: String){
+sealed class Screen(val route: String) {
     companion object {
         private const val ROUTER_SPLASH = "splash_screen"
         private const val ROUTER_REGISTRATION = "registration_screen"
@@ -18,8 +18,20 @@ sealed class Screen(val route: String){
     object LoginScreen: Screen(ROUTER_LOGIN)
     object RegistrationScreen: Screen(ROUTER_REGISTRATION)
     object AboutScreen: Screen(ROUTER_ABOUT)
-    object ProfileScreen: Screen(ROUTER_PROFILE)
-    object MainScreen: Screen(ROUTER_MAIN)
+
+    // Для экранов с аргументами добавляем базовые маршруты и функции для создания полного маршрута
+    object ProfileScreen: Screen("$ROUTER_PROFILE?userId={userId}&isFromMenu={isFromMenu}") {
+        fun createRoute(userId: String? = null, isFromMenu: Boolean = true): String {
+            return "$ROUTER_PROFILE?userId=$userId&isFromMenu=$isFromMenu"
+        }
+    }
+
+    object MainScreen: Screen("$ROUTER_MAIN?isFromMenu={isFromMenu}&name={name}&canRedact={canRedact}") {
+        fun createRoute(isFromMenu: Boolean = true, name: String? = null, canRedact: Boolean = false): String {
+            return "$ROUTER_MAIN?isFromMenu=$isFromMenu&name=$name&canRedact=$canRedact"
+        }
+    }
+
     object TrackableScreen: Screen(ROUTER_TRACKABLE)
     object SettingsScreen: Screen(ROUTER_SETTINGS)
 }

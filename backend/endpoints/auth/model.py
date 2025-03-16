@@ -6,7 +6,7 @@ from typing import Optional
 class AuthData:
     login: str
     password: str
-    phone: Optional[str] = None
+    avatar: Optional[str] = None
 
     @staticmethod
     def from_json(data: dict) -> 'AuthData':
