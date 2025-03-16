@@ -2,10 +2,20 @@ package com.khl_app.ui.screens.client
 
 import AuthViewModel
 import MainViewModel
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -15,8 +25,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,7 +50,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.khl_app.domain.models.EventPredictionItem
 import com.khl_app.storage.getUserIdFromToken
 import com.khl_app.ui.navigation.Screen
@@ -52,7 +75,6 @@ fun MainScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    // Объединяем состояния загрузки в одну переменную для предотвращения множественных запросов
     var loadingDirection by remember { mutableStateOf(LoadDirection.NONE) }
     val bottomSheetState = rememberModalBottomSheetState()
     var aboutState by remember { mutableStateOf(false) }
@@ -61,12 +83,10 @@ fun MainScreen(
     val listState = rememberLazyListState()
 
 
-    // Сохраняем индекс отображаемого элемента перед загрузкой новых элементов
     var initialItemIndex by remember { mutableStateOf(0) }
     var initialItemOffset by remember { mutableStateOf(0) }
     var previousItemsCount by remember { mutableStateOf(0) }
 
-    // Сохраняем текущую позицию скролла
     LaunchedEffect(listState) {
         snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
             .collect { (index, offset) ->
@@ -78,17 +98,14 @@ fun MainScreen(
             }
     }
 
-    // Проверяем, нужно ли загрузить больше данных при достижении верха или низа списка
     LaunchedEffect(listState) {
         snapshotFlow {
             val firstVisibleIndex = listState.firstVisibleItemIndex
             val layoutInfo = listState.layoutInfo
             val totalItemsCount = layoutInfo.totalItemsCount
 
-            // Проверяем, находимся ли мы в начале списка (новые события)
             val isAtTop = firstVisibleIndex == 0 && listState.firstVisibleItemScrollOffset == 0
 
-            // Проверяем, находимся ли мы в конце списка (старые события)
             val isAtBottom = if (totalItemsCount > 0) {
                 val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
                 lastVisibleIndex >= totalItemsCount - 1
@@ -96,7 +113,6 @@ fun MainScreen(
 
             Pair(isAtTop, isAtBottom)
         }
-            // Добавляем debounce — не чаще одного раза в 1000 мс
             .debounce(1000L)
             .collect { (isAtTop, isAtBottom) ->
                 // Предотвращаем множественные запросы - загрузка только когда нет активной загрузки
@@ -114,16 +130,12 @@ fun MainScreen(
             }
     }
 
-    // Восстанавливаем позицию скролла после загрузки данных
     LaunchedEffect(isLoading) {
         if (!isLoading && loadingDirection != LoadDirection.NONE) {
             if (loadingDirection == LoadDirection.FUTURE && events.size > previousItemsCount) {
-                // Вычисляем смещение из-за новых элементов сверху
                 val newItemsCount = events.size - previousItemsCount
-                // Скроллим к предыдущей позиции с учетом добавленных элементов
                 listState.scrollToItem(initialItemIndex + newItemsCount, initialItemOffset)
             } else if (loadingDirection == LoadDirection.PAST) {
-                // При загрузке прошлых событий восстанавливаем позицию как есть
                 listState.scrollToItem(initialItemIndex, initialItemOffset)
             }
 
@@ -131,7 +143,6 @@ fun MainScreen(
         }
     }
 
-    // Скроллим к сегодняшней дате при первой загрузке данных
     LaunchedEffect(events.isNotEmpty()) {
         if (events.isNotEmpty() && !isLoading) {
             val today = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yy"))
@@ -139,7 +150,6 @@ fun MainScreen(
             val todayIndex = dateGroups.indexOf(today)
 
             if (todayIndex >= 0) {
-                // Вычисляем позицию для скролла
                 var position = 0
                 val groupedEvents = events.groupBy { it.date }.toList().sortedByDescending { it.first }.toMap()
 
@@ -172,7 +182,6 @@ fun MainScreen(
                 }
             },
             onFilterApplied = {
-                // Перезагружаем события с новыми фильтрами
                 scope.launch {
                     loadingDirection = LoadDirection.NONE
                     viewModel.loadEvents()
@@ -182,7 +191,6 @@ fun MainScreen(
             isFromMenu = isFromMenu
         )
 
-        // Навигационные кнопки
         NavigationButtons(
             events = events,
             listState = listState,
@@ -204,7 +212,6 @@ fun MainScreen(
                 )
             }
         } else {
-            // Отображаем все события в едином хронологическом списке
             if (events.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
@@ -217,7 +224,6 @@ fun MainScreen(
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Верхний индикатор загрузки (для будущих событий)
                     if (loadingDirection == LoadDirection.FUTURE && isLoading) {
                         Box(
                             modifier = Modifier
@@ -232,7 +238,6 @@ fun MainScreen(
                         }
                     }
 
-                    // Основной список
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -242,11 +247,10 @@ fun MainScreen(
                             listState = listState,
                             authViewModel = viewModel.authViewModel,
                             onPredictionMade = { viewModel.loadEvents() },
-                            canRedact = canRedact// Перезагружаем события после прогноза
+                            canRedact = canRedact
                         )
                     }
 
-                    // Нижний индикатор загрузки (для прошлых событий)
                     if (loadingDirection == LoadDirection.PAST && isLoading) {
                         Box(
                             modifier = Modifier
@@ -300,7 +304,6 @@ fun MainScreen(
     }
 }
 
-// Перечисление для отслеживания направления загрузки
 enum class LoadDirection {
     NONE, FUTURE, PAST
 }
@@ -311,53 +314,44 @@ fun NavigationButtons(
     listState: LazyListState,
     scope: CoroutineScope
 ) {
-    // Получение сегодняшней даты
     val today = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yy"))
 
-    // Группируем события по дате и сортируем в обратном хронологическом порядке (новые вверху)
     val groupedEvents = events.groupBy { it.date }
         .toList()
         .sortedByDescending { it.first }
         .toMap()
 
-    // Преобразуем в список для удобного доступа
     val dateGroups = groupedEvents.keys.toList()
 
-    // Находим индексы важных дат
     val todayIndex = dateGroups.indexOf(today)
 
-    // Функция для поиска предыдущей даты относительно сегодня
     fun findNearestFutureDate(): Int {
         if (dateGroups.isEmpty()) return -1
-        if (todayIndex <= 0) return dateGroups.size - 1  // Если сегодня уже первый день или его нет, берем последний
-        return todayIndex - 1  // Берем предыдущий день относительно сегодня
+        if (todayIndex <= 0) return dateGroups.size - 1
+        return todayIndex - 1
     }
 
-    // Функция для поиска следующей даты относительно сегодня
     fun findNearestPastDate(): Int {
         if (dateGroups.isEmpty()) return -1
-        if (todayIndex < 0 || todayIndex >= dateGroups.size - 1) return 0  // Если сегодня последний день или его нет, берем первый
-        return todayIndex + 1  // Берем следующий день относительно сегодня
+        if (todayIndex < 0 || todayIndex >= dateGroups.size - 1) return 0
+        return todayIndex + 1
     }
 
-    // Функция для вычисления позиции прокрутки к определенной дате
     fun calculateScrollPosition(targetDateIndex: Int): Int {
         if (targetDateIndex < 0 || dateGroups.isEmpty()) return 0
 
         var position = 0
         for (i in 0 until targetDateIndex) {
-            position += 1 + (groupedEvents[dateGroups[i]]?.size ?: 0) // 1 за заголовок + количество событий
+            position += 1 + (groupedEvents[dateGroups[i]]?.size ?: 0)
         }
         return position
     }
 
-    // Определяем, какая вкладка активна
-    var selectedTabIndex by remember { mutableStateOf(1) } // По умолчанию "Сегодня"
+    var selectedTabIndex by remember { mutableStateOf(1) }
 
-    // Цвета в соответствии со скриншотом
-    val darkPurple = Color(0xFF1D1F2B) // Фон неактивных кнопок
-    val lightPurple = Color(0xFF6C5CE7) // Фон активной кнопки
-    val textColor = Color.White // Цвет текста
+    val darkPurple = Color(0xFF1D1F2B)
+    val lightPurple = Color(0xFF6C5CE7)
+    val textColor = Color.White
 
     Row(
         modifier = Modifier
@@ -368,7 +362,6 @@ fun NavigationButtons(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Кнопка "Предыдущие" (скролл к ближайшим предыдущим событиям)
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -396,7 +389,6 @@ fun NavigationButtons(
             )
         }
 
-        // Кнопка "Сегодня"
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -423,7 +415,6 @@ fun NavigationButtons(
             )
         }
 
-        // Кнопка "Будущие" (скролл к ближайшим будущим событиям)
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -488,7 +479,7 @@ fun CenterContent(modifier: Modifier = Modifier, name: String?) {
     val date = LocalDate.now().format(firstApiFormat)
 
     Column(
-        modifier = modifier, // Убедитесь, что фон не задается здесь
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -496,12 +487,12 @@ fun CenterContent(modifier: Modifier = Modifier, name: String?) {
             text = if (name != null && name != "{name}") "Календарь $name" else "Календарь",
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
-            color = Color.White // Замените цвет текста, если нужно, под новый фон
+            color = Color.White
         )
         Text(
             text = "сегодня: " + date,
             fontSize = 14.sp,
-            color = Color.White.copy(alpha = 0.7f) // Замените цвет текста, если нужно
+            color = Color.White.copy(alpha = 0.7f)
         )
     }
 }
@@ -527,23 +518,18 @@ private fun MenuButton(isFromMenu: Boolean, onMenuClick: () -> Unit) {
     }
 }
 
-// Обновленная функция SettingsButton для MainScreen.kt
 @Composable
 fun SettingsButton(
     mainViewModel: MainViewModel,
     onFilterApplied: () -> Unit
 ) {
-    // Состояние для контроля отображения диалога фильтрации
     val showFilterDialog = remember { mutableStateOf(false) }
 
-    // Состояния для сохранения выбранных фильтров
     val selectedDate = remember { mutableStateOf<LocalDate?>(null) }
     val selectedTeamIds = remember { mutableStateOf<List<String>>(emptyList()) }
 
-    // Получаем данные о командах из TeamViewModel
     val teamsMap by mainViewModel.teamViewModel.teamsMap.collectAsState()
 
-    // Преобразуем Map<String, TeamData> в список TeamBasicInfo для диалога фильтрации
     val teamsForFilter = teamsMap.values.map { teamData ->
         TeamBasicInfo(
             id = teamData.id.toString(),
@@ -553,7 +539,6 @@ fun SettingsButton(
         )
     }
 
-    // Кнопка настроек
     IconButton(onClick = { showFilterDialog.value = true }) {
         Icon(
             Icons.Rounded.Settings,
@@ -563,7 +548,6 @@ fun SettingsButton(
         )
     }
 
-    // Диалог фильтрации
     FilterDialog(
         show = showFilterDialog.value,
         teams = teamsForFilter,
@@ -571,13 +555,10 @@ fun SettingsButton(
         initialSelectedTeams = selectedTeamIds.value,
         onDismiss = { showFilterDialog.value = false },
         onApply = { date, teamIds ->
-            // Сохраняем выбранные значения для возможного повторного открытия диалога
             selectedDate.value = date
             selectedTeamIds.value = teamIds
 
-            // Устанавливаем фильтры в EventViewModel
             if (date != null) {
-                // Если выбрана конкретная дата, устанавливаем диапазон на этот день
                 val startCalendar = Calendar.getInstance().apply {
                     set(date.year, date.monthValue - 1, date.dayOfMonth, 0, 0, 0)
                 }
@@ -586,7 +567,6 @@ fun SettingsButton(
                 }
                 mainViewModel.eventViewModel.setDateRange(startCalendar, endCalendar)
             } else {
-                // Если дата не выбрана, используем стандартный диапазон (±3 дня)
                 val startDate = Calendar.getInstance().apply {
                     add(Calendar.DAY_OF_MONTH, -3)
                 }
@@ -596,13 +576,10 @@ fun SettingsButton(
                 mainViewModel.eventViewModel.setDateRange(startDate, endDate)
             }
 
-            // Устанавливаем выбранные команды
             mainViewModel.eventViewModel.setSelectedTeams(teamIds)
 
-            // Закрываем диалог
             showFilterDialog.value = false
 
-            // Вызываем колбэк для применения фильтров и перезагрузки данных
             onFilterApplied()
         }
     )
@@ -616,10 +593,9 @@ fun MatchList(
     onPredictionMade: () -> Unit,
     canRedact: Boolean
 ) {
-    // Группируем события по дате и сортируем в обратном хронологическом порядке (новые вверху)
     val groupItems = events.groupBy { it.date }
         .toList()
-        .sortedByDescending { it.first } // Обратный порядок - новые вверху
+        .sortedByDescending { it.first }
         .toMap()
 
     LazyColumn(
@@ -628,7 +604,6 @@ fun MatchList(
         contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp)
     ) {
         groupItems.forEach { (date, cards) ->
-            // Для каждой даты добавляем заголовок и затем события
             item {
                 Box(
                     modifier = Modifier
@@ -644,7 +619,6 @@ fun MatchList(
                             .align(Alignment.Center)
                     )
 
-                    // Сегодняшняя дата выделяется цветом
                     val today = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yy"))
                     val isToday = date == today
 
