@@ -452,6 +452,7 @@ fun TopBar(
     name: String?,
     isFromMenu: Boolean
 ) {
+    Spacer(modifier = Modifier.height(30.dp))
     Row(
         modifier = Modifier
             .fillMaxWidth()
