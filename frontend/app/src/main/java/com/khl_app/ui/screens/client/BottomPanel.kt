@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -41,6 +42,7 @@ fun BottomPanel(
     onCalendar: () -> Unit,
     onTrackable: () -> Unit,
     onProfile: () -> Unit,
+    onAbout: () -> Unit,
     onLogout: () -> Unit,
     state: SheetState,
     scope: CoroutineScope,
@@ -79,6 +81,13 @@ fun BottomPanel(
                         state.hide()
                     }
                     onProfile()
+                })
+            BottomPanelElement("О приложении", Icons.Filled.Info,
+                onClick = {
+                    scope.launch {
+                        state.hide()
+                    }
+                    onAbout()
                 })
             BottomPanelElement("Выход", Icons.AutoMirrored.Filled.ExitToApp,
                 onClick = {
@@ -134,6 +143,7 @@ fun BottomPanelElement(
 fun BottomPanelPreview() {
     KhlAppTheme {
         BottomPanel(
+            {},
             {},
             {},
             {},
