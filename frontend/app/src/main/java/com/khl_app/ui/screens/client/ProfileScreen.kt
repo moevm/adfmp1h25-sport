@@ -77,14 +77,11 @@ fun ProfileScreen(
     val scope = rememberCoroutineScope()
     var aboutIsVisible by remember { mutableStateOf(false) }
 
-    // Collect states from viewModel
     val followersUiState by followersViewModel.uiState.collectAsState()
     val followersList by followersViewModel.followers.collectAsState()
 
-    // Get user data
     var userData by remember { mutableStateOf<FollowerResponse?>(null) }
 
-    // Load user data based on userId
     LaunchedEffect(key1 = userId, key2 = followersList) {
         if (userId != null) {
             userData = followersList.find { it.id == userId }
