@@ -195,6 +195,7 @@ fun ProfileScreen(
 
 @Composable
 fun TopBar(isFromMenu: Boolean, onMenuClick: () -> Unit, onBackClick: () -> Unit) {
+    Spacer(modifier = Modifier.height(30.dp))
     Row(
         modifier = Modifier
             .fillMaxWidth()
