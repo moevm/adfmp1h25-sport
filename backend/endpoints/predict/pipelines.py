@@ -1,9 +1,9 @@
 from bson import ObjectId
 
 
-def get_predicts_pipeline(start_time, end_time):
+def get_predicts_pipeline(start_time, end_time, id):
     return [
-        {'$match': {'_id': ObjectId('67b50cac5480bb4fb83cb183')}},
+        {'$match': {'_id': ObjectId(id)}},
         {'$project': {
             'days': {
                 '$objectToArray': '$days'

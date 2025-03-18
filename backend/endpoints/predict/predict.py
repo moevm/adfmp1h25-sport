@@ -80,7 +80,7 @@ def get_predicts(id):
 
     if not (user_id and start_time and end_time):
         return {"message": "missed parameters"}, 400
-    res = list(USERS_PREDICTS.aggregate(get_predicts_pipeline(start_time, end_time)))
+    res = list(USERS_PREDICTS.aggregate(get_predicts_pipeline(start_time, end_time, user_id)))
     if len(res) == 0:
         return {}, 200
     return res[0]['days']

@@ -78,4 +78,10 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Query("avatar") avatar: String
     ): Response<String>
+
+    @POST("followers/set_name")
+    suspend fun setName(
+        @Header("Authorization") token: String,
+        @Query("name") name: String
+    ): Response<String>
 }

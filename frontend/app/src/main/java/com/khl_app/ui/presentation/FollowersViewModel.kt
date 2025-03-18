@@ -152,6 +152,37 @@ class FollowersViewModel(
     fun resetAvatarState() {
         _avatarState.value = AvatarState.Idle
     }
+
+    private val _nameState = MutableStateFlow<NameState>(NameState.Idle)
+    val nameState: StateFlow<NameState> = _nameState.asStateFlow()
+
+    fun setName(name: String) {
+        viewModelScope.launch {
+            _nameState.value = NameState.Loading
+            try {
+                tokenRepository.getInfo().collect { tokenData ->
+                    val accessToken = tokenData.accessToken
+                    if (accessToken.isNotEmpty()) {
+                        val response = apiService.setName("Bearer $accessToken", name)
+                        if (response.isSuccessful) {
+                            _nameState.value = NameState.Success("Имя успешно изменено")
+                            loadFollowers() // Обновляем список подписчиков
+                        } else {
+                            _nameState.value = NameState.Error("Ошибка изменения имени: ${response.code()}")
+                        }
+                    } else {
+                        _nameState.value = NameState.Error("Токен авторизации отсутствует")
+                    }
+                }
+            } catch (e: Exception) {
+                _nameState.value = NameState.Error("Ошибка: ${e.message}")
+            }
+        }
+    }
+
+    fun resetNameState() {
+        _nameState.value = NameState.Idle
+    }
 }
 
 sealed class FollowersUiState {
@@ -172,4 +203,11 @@ sealed class AvatarState {
     object Loading : AvatarState()
     data class Success(val message: String) : AvatarState()
     data class Error(val message: String) : AvatarState()
+}
+
+sealed class NameState {
+    object Idle : NameState()
+    object Loading : NameState()
+    data class Success(val message: String) : NameState()
+    data class Error(val message: String) : NameState()
 }

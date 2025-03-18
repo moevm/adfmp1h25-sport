@@ -81,3 +81,14 @@ def set_avatar(user_id):
         {"$set": {"avatar": avatar}}
     )
     return "ok"
+
+
+@followers_bp.route('/set_name', methods=['POST'])
+@get_user_id
+def set_name(user_id):
+    name = request.args.get("name")
+    USERS_ENTRY_CL.update_one(
+        {"_id": ObjectId(user_id)}, 
+        {"$set": {"login": name}}
+    )
+    return "ok"

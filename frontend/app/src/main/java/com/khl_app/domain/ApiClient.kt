@@ -27,7 +27,7 @@ object ApiClient {
 
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS) // Таймаут подключения
-        .readTimeout(60, TimeUnit.SECONDS)    // Таймаут чтения (увеличен)
+        .readTimeout(20, TimeUnit.SECONDS)    // Таймаут чтения (увеличен)
         .writeTimeout(20, TimeUnit.SECONDS)   // Таймаут записи
         .retryOnConnectionFailure(true)       // Автоматические повторные попытки
         .build()

@@ -80,13 +80,13 @@ class MainViewModel(
 
     fun loadMorePastEvents() {
         viewModelScope.launch {
-            eventViewModel.loadMorePastEventsSequentially()
+            eventViewModel.loadMorePastEventsSequentially(true)
         }
     }
 
     fun loadMoreFutureEvents() {
         viewModelScope.launch {
-            eventViewModel.loadMoreFutureEventsSequentially()
+            eventViewModel.loadMoreFutureEventsSequentially(true)
         }
     }
 
@@ -99,4 +99,5 @@ class MainViewModel(
     fun getCurrentTeam(onResult: (TeamData?) -> Unit) {
         onResult(null)
     }
+
 }

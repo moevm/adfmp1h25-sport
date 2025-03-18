@@ -1,5 +1,6 @@
 // EventViewModel.kt (с добавленными методами)
 import android.util.Log
+import androidx.lifecycle.viewModelScope
 import com.khl_app.domain.ApiClient
 import com.khl_app.domain.models.EventPredictionItem
 import com.khl_app.domain.models.EventResponse
@@ -9,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -74,19 +76,24 @@ class EventViewModel(
         return SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(date)
     }
 
-    suspend fun loadEventsSequentially() {
+    suspend fun loadEventsSequentially(skipTeamsLoading: Boolean = false) {
         _isLoading.value = true
-        Log.d("EventsViewModel", "Starting to load events")
+        Log.d("EventsViewModel", "Starting to load events" + (if (skipTeamsLoading) " (skipping teams loading)" else ""))
         try {
             withContext(Dispatchers.IO) {
-                Log.d("EventsViewModel", "Waiting for teams to load")
-                val teamsLoaded = teamViewModel.awaitTeamsLoadedSequentially()
-                Log.d("EventsViewModel", "Teams loaded status: $teamsLoaded")
+                // Проверяем, нужно ли загружать команды
+                var teamsLoaded = skipTeamsLoading
 
-                if (!teamsLoaded) {
-                    _error.value = "Не удалось загрузить команды"
-                    Log.e("EventsViewModel", "Failed to load teams")
-                    return@withContext
+                if (!skipTeamsLoading) {
+                    Log.d("EventsViewModel", "Waiting for teams to load")
+                    teamsLoaded = teamViewModel.awaitTeamsLoadedSequentially()
+                    Log.d("EventsViewModel", "Teams loaded status: $teamsLoaded")
+
+                    if (!teamsLoaded) {
+                        _error.value = "Не удалось загрузить команды"
+                        Log.e("EventsViewModel", "Failed to load teams")
+                        return@withContext
+                    }
                 }
 
                 val teamsMap = teamViewModel.teamsMap.first()
@@ -184,14 +191,14 @@ class EventViewModel(
         loadEventsSequentially()
     }
 
-    suspend fun loadMorePastEventsSequentially() {
+    suspend fun loadMorePastEventsSequentially(skipTeamsLoading: Boolean = true) {
         currentStartDate.add(Calendar.DAY_OF_MONTH, -10)
-        loadEventsSequentially()
+        loadEventsSequentially(skipTeamsLoading)
     }
 
-    suspend fun loadMoreFutureEventsSequentially() {
+    suspend fun loadMoreFutureEventsSequentially(skipTeamsLoading: Boolean = true) {
         currentEndDate.add(Calendar.DAY_OF_MONTH, 10)
-        loadEventsSequentially()
+        loadEventsSequentially(skipTeamsLoading)
     }
 
     private fun mapEventsToEventPredictionItems(
@@ -223,5 +230,22 @@ class EventViewModel(
                 null
             }
         }.sortedBy { it.date }
+    }
+
+    fun resetAndLoadEvents() {
+        _events.value = emptyList()
+        _isLoading.value = true
+        _error.value = null
+
+        currentStartDate = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_MONTH, -10)
+        }
+        currentEndDate = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_MONTH, 10)
+        }
+
+        viewModelScope.launch {
+            loadEventsSequentially(skipTeamsLoading = true)
+        }
     }
 }

@@ -44,10 +44,9 @@ fun PredictCardItem(item: EventPredictionItem, eventId: String, authViewModel: A
             .wrapContentHeight()
             .padding(vertical = 8.dp, horizontal = 16.dp)
             .clickable {
-                if(!canRedact){
+                if (!canRedact) {
                     Toast.makeText(context, "Не ваш календарь", Toast.LENGTH_SHORT).show()
-                }
-                else if (item.period == null) {
+                } else if (item.period == null) {
                     showPredictDialog = true
                 } else {
                     Toast.makeText(context, "Матч уже начался", Toast.LENGTH_SHORT).show()
@@ -159,12 +158,22 @@ fun PredictCardItem(item: EventPredictionItem, eventId: String, authViewModel: A
             }
 
             if (item.period != null && item.period.toString() != "-1") {
-                Text(
-                    text = "Период: ${item.period}",
-                    fontSize = 14.sp,
-                    color = Color(0xFF6C5CE7),
-                    modifier = Modifier.padding(vertical = 2.dp)
-                )
+                if(item.period.toString() == "10") {
+                    Text(
+                        text = "Период: ${item.period}",
+                        fontSize = 14.sp,
+                        color = Color(0xFF6C5CE7),
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
+                }
+                else{
+                    Text(
+                        text = "Перерыв",
+                        fontSize = 14.sp,
+                        color = Color(0xFF6C5CE7),
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
+                }
             }
 
             if (item.result == null && item.prediction == null && item.period == null) {

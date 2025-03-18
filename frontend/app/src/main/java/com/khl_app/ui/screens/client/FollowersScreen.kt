@@ -1,6 +1,7 @@
 package com.khl_app.presentation.screens
 
 import MainViewModel
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +47,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.khl_app.storage.getUserIdFromToken
 import com.khl_app.ui.navigation.Screen
@@ -178,7 +180,6 @@ fun FollowersScreen(
                     }
                 },
                 actions = {
-                    // Кнопка добавления подписки
                     IconButton(onClick = { showSubscribeDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Add,
@@ -257,15 +258,21 @@ fun FollowersScreen(
                                 FollowerItem(
                                     follower = follower,
                                     onMessageClick = {
+                                        Log.d("FollowersList", "Message click for follower: ${follower.id}")
+                                        mainViewModel.eventViewModel.setUserId(follower.id)
+                                        mainViewModel.eventViewModel.resetAndLoadEvents()
                                         navHostController.navigate(Screen.MainScreen.createRoute(canRedact = false, isFromMenu = false, name = follower.name))
                                     },
                                     onDeleteClick = { viewModel.removeFollower(it) },
                                     onItemClick = {
-                                        navHostController.navigate(Screen.ProfileScreen.createRoute(
-                                            userId = follower.id,
-                                            isFromMenu = false,
-                                            isYou = follower.name == "nick"
-                                        ))
+                                        viewModel.viewModelScope.launch {
+                                            val my_id = getUserIdFromToken(mainViewModel.tokenCache.getInfo().first().accessToken)
+                                            navHostController.navigate(Screen.ProfileScreen.createRoute(
+                                                userId = follower.id,
+                                                isFromMenu = false,
+                                                isYou = follower.id == my_id
+                                            ))
+                                        }
                                     },
                                     isYou = follower.id == ownUserId
                                 )
@@ -290,7 +297,11 @@ fun FollowersScreen(
 
     if (bottomSheetState.isVisible) {
         BottomPanel(
-            onCalendar = { navHostController.navigate(Screen.MainScreen.route) },
+            onCalendar = {
+                mainViewModel.eventViewModel.setUserId("current")
+                mainViewModel.eventViewModel.resetAndLoadEvents()
+                navHostController.navigate(Screen.MainScreen.route)
+            },
             onTrackable = {},
             onProfile = {
                 scope.launch {

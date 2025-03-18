@@ -21,17 +21,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,6 +68,11 @@ import com.khl_app.ui.screens.AboutPopUp
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.unit.width
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -154,11 +165,9 @@ fun ProfileScreen(
         if (state.isVisible) {
             BottomPanel(
                 onCalendar = {
-                    navHostController.navigate(Screen.MainScreen.route) {
-                        popUpTo(Screen.ProfileScreen.route) {
-                            inclusive = true
-                        }
-                    }
+                    viewModel.eventViewModel.setUserId("current")
+                    viewModel.eventViewModel.resetAndLoadEvents()
+                    navHostController.navigate(Screen.MainScreen.route)
                 },
                 onProfile = {},
                 onAbout = {
@@ -272,6 +281,9 @@ fun ProfileContent(
 
     val context = LocalContext.current
     var showUploadMessage by remember { mutableStateOf(false) }
+    var showCopiedMessage by remember { mutableStateOf(false) }
+    var editNameDialogVisible by remember { mutableStateOf(false) }
+    var newName by remember { mutableStateOf(userData.name) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -343,12 +355,55 @@ fun ProfileContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = userData.name,
-            color = Color.White,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Medium
-        )
+        // Name with edit icon
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = userData.name,
+                color = Color.White,
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Medium
+            )
+
+            if (isYou) {
+                IconButton(
+                    onClick = { editNameDialogVisible = true },
+                    modifier = Modifier.size(22.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Изменить имя",
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+
+        // User ID with copy button
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .padding(vertical = 4.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFF3D4055))
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+                .clickable {
+                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                    val clip = android.content.ClipData.newPlainText("User ID", userData.id)
+                    clipboard.setPrimaryClip(clip)
+                    showCopiedMessage = true
+                }
+        ) {
+            Text(
+                text = "ID: ${userData.id}",
+                color = Color.White.copy(alpha = 0.8f),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -432,6 +487,71 @@ fun ProfileContent(
                 showUploadMessage = false
             }
         }
+    }
+
+    if (showCopiedMessage) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 16.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Snackbar(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "ID скопирован в буфер обмена",
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
+            }
+
+            LaunchedEffect(key1 = showCopiedMessage) {
+                kotlinx.coroutines.delay(3000)
+                showCopiedMessage = false
+            }
+        }
+    }
+
+    // Name edit dialog
+    if (editNameDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { editNameDialogVisible = false },
+            title = {
+                Text(
+                    text = "Изменить имя",
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                TextField(
+                    value = newName,
+                    onValueChange = { newName = it },
+                    label = { Text("Имя", color = Color.White.copy(alpha = 0.7f)) }
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.setName(newName)
+                        editNameDialogVisible = false
+                    }
+                ) {
+                    Text("Сохранить", color = Color(0xFF6C5CE7))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { editNameDialogVisible = false }
+                ) {
+                    Text("Отмена", color = Color.White.copy(alpha = 0.7f))
+                }
+            },
+            containerColor = Color(0xFF2C2F3E),
+            shape = RoundedCornerShape(16.dp)
+        )
     }
 }
 
