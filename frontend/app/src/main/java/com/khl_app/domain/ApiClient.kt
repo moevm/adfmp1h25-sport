@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
 
 fun loadUrl(): String {
     val dotenv = dotenv {
-        directory = "./assets"
+        directory = "./"
         filename = "env"
     }
     return dotenv["BASE_URL"]
