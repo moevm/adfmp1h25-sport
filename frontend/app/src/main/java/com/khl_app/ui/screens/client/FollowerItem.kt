@@ -10,12 +10,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -23,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.khl_app.domain.models.FollowerResponse
 import com.khl_app.domain.models.LevelSystem
 
@@ -32,13 +35,14 @@ fun FollowerItem(
     onMessageClick: (String) -> Unit,
     onDeleteClick: (String) -> Unit,
     onItemClick: (String) -> Unit,
-    isYou: Boolean
+    isYou: Boolean,
+    isTopFollower: Boolean = false
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
-            .background(Color(0xFF303030))
+            .background(Color.Transparent)
             .clickable { onItemClick(follower.id) }
     ) {
         Row(
@@ -49,35 +53,62 @@ fun FollowerItem(
         ) {
             Box(
                 modifier = Modifier
-                    .size(70.dp)
-                    .clip(CircleShape)
-                    .background(LevelSystem.getAvatarBorderColor(follower.points)),
+                    .size(80.dp),
                 contentAlignment = Alignment.Center
             ) {
+                // Золотая корона для первого в списке
+                if (isTopFollower) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Лидер",
+                        tint = Color(0xFFFFD700), // Золотой цвет
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = (0).dp, x = 40.dp)
+                            .size(24.dp)
+                            .zIndex(1f)
+                    )
+                }
+
                 Box(
                     modifier = Modifier
-                        .size(60.dp)
+                        .size(70.dp)
                         .clip(CircleShape)
-                        .background(Color.DarkGray),
+                        .background(LevelSystem.getAvatarBorderColor(follower.points)),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (follower.avatar != null && follower.avatar.isNotEmpty()) {
-                        val avatarBitmap = remember(follower.avatar) {
-                            try {
-                                val imageBytes = Base64.decode(follower.avatar, Base64.DEFAULT)
-                                BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size).asImageBitmap()
-                            } catch (e: Exception) {
-                                null
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .background(Color.DarkGray),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (follower.avatar != null && follower.avatar.isNotEmpty()) {
+                            val avatarBitmap = remember(follower.avatar) {
+                                try {
+                                    val imageBytes = Base64.decode(follower.avatar, Base64.DEFAULT)
+                                    BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size).asImageBitmap()
+                                } catch (e: Exception) {
+                                    null
+                                }
                             }
-                        }
 
-                        if (avatarBitmap != null) {
-                            Image(
-                                bitmap = avatarBitmap,
-                                contentDescription = "Аватар пользователя",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
+                            if (avatarBitmap != null) {
+                                Image(
+                                    bitmap = avatarBitmap,
+                                    contentDescription = "Аватар пользователя",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Text(
+                                    text = follower.name.first().toString(),
+                                    color = Color.White,
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         } else {
                             Text(
                                 text = follower.name.first().toString(),
@@ -86,13 +117,6 @@ fun FollowerItem(
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                    } else {
-                        Text(
-                            text = follower.name.first().toString(),
-                            color = Color.White,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold
-                        )
                     }
                 }
             }
@@ -151,6 +175,8 @@ fun FollowerItem(
                             modifier = Modifier.size(28.dp)
                         )
                     }
+
+                    Spacer(modifier = Modifier.width(10.dp))
 
                     IconButton(
                         onClick = { onDeleteClick(follower.id) },

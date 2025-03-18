@@ -188,14 +188,14 @@ fun FollowersScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
+                    containerColor = Color(0xFF2C2F3E),
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White,
-                    actionIconContentColor = Color.White
+                    actionIconContentColor = Color.White,
                 )
             )
         },
-        containerColor = Color.Transparent
+        containerColor = Color(0xFF2C2F3E)
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -250,11 +250,15 @@ fun FollowersScreen(
                             )
                         }
                     } else {
+                        // В блоке LazyColumn в FollowersScreen.kt, где выводится список подписчиков
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(vertical = 8.dp)
                         ) {
-                            items(followers) { follower ->
+                            // Сортируем подписчиков по количеству очков в убывающем порядке
+                            val sortedFollowers = followers.sortedByDescending { it.points }
+
+                            items(sortedFollowers) { follower ->
                                 FollowerItem(
                                     follower = follower,
                                     onMessageClick = {
@@ -274,7 +278,8 @@ fun FollowersScreen(
                                             ))
                                         }
                                     },
-                                    isYou = follower.id == ownUserId
+                                    isYou = follower.id == ownUserId,
+                                    isTopFollower = sortedFollowers.indexOf(follower) == 0
                                 )
                             }
                         }
