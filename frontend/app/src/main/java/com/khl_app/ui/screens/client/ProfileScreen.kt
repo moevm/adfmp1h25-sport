@@ -69,6 +69,10 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.unit.width
@@ -202,7 +206,7 @@ fun TopBar(isFromMenu: Boolean, onMenuClick: () -> Unit, onBackClick: () -> Unit
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 12.dp)
+            .padding(horizontal = 10.dp, vertical = 25.dp)
     ) {
         // Левая часть (кнопка меню или назад)
         Box(
@@ -530,30 +534,49 @@ fun ProfileContent(
                 )
             },
             text = {
-                TextField(
+                OutlinedTextField(
                     value = newName,
                     onValueChange = { newName = it },
-                    label = { Text("Имя", color = Color.White.copy(alpha = 0.7f)) }
+                    label = { Text("Имя", color = Color.White.copy(alpha = 0.7f)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedTextColor = Color.White,
+                        focusedTextColor = Color.White,
+                        cursorColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f),
+                        focusedLabelColor = Color.White
+                    )
                 )
             },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         viewModel.setName(newName)
                         editNameDialogVisible = false
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF6C5CE7)
+                    )
                 ) {
-                    Text("Сохранить", color = Color(0xFF6C5CE7))
+                    Text("Сохранить", color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(
-                    onClick = { editNameDialogVisible = false }
+                    onClick = { editNameDialogVisible = false },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color.White
+                    )
                 ) {
-                    Text("Отмена", color = Color.White.copy(alpha = 0.7f))
+                    Text("Отмена")
                 }
             },
             containerColor = Color(0xFF2C2F3E),
+            titleContentColor = Color.White,
+            textContentColor = Color.White,
             shape = RoundedCornerShape(16.dp)
         )
     }

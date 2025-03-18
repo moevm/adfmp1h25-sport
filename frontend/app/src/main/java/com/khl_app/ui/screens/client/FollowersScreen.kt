@@ -116,14 +116,29 @@ fun FollowersScreen(
                 showSubscribeDialog = false
                 userIdInput = ""
             },
-            title = { Text("Подписаться на пользователя") },
+            title = {
+                Text(
+                    "Подписаться на пользователя",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
                 OutlinedTextField(
                     value = userIdInput,
                     onValueChange = { userIdInput = it },
-                    label = { Text("ID пользователя") },
+                    label = { Text("ID пользователя", color = Color.White.copy(alpha = 0.7f)) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        unfocusedTextColor = Color.White,
+                        focusedTextColor = Color.White,
+                        cursorColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f),
+                        focusedLabelColor = Color.White
+                    )
                 )
             },
             confirmButton = {
@@ -140,9 +155,12 @@ fun FollowersScreen(
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF6C5CE7)
+                    )
                 ) {
-                    Text("Подписаться")
+                    Text("Подписаться", color = Color.White)
                 }
             },
             dismissButton = {
@@ -150,11 +168,17 @@ fun FollowersScreen(
                     onClick = {
                         showSubscribeDialog = false
                         userIdInput = ""
-                    }
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color.White
+                    )
                 ) {
                     Text("Отмена")
                 }
-            }
+            },
+            containerColor = Color(0xFF2C2F3E),
+            titleContentColor = Color.White,
+            textContentColor = Color.White
         )
     }
 
