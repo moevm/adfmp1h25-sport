@@ -23,16 +23,20 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -75,6 +79,7 @@ fun FilterDialog(
         var selectedDate by remember { mutableStateOf(initialSelectedDate) }
         var selectedTeams by remember { mutableStateOf(initialSelectedTeams) }
         var currentWeek by remember { mutableStateOf(LocalDate.now()) }
+        var searchQuery by remember { mutableStateOf("") }
 
         Dialog(
             onDismissRequest = onDismiss,
@@ -88,12 +93,13 @@ fun FilterDialog(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(0x99000000)), // Полупрозрачный черный фон
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.TopCenter // Изменено с Center на TopCenter
             ) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth(0.9f)
-                        .fillMaxHeight(0.8f),
+                        .fillMaxHeight(0.9f)
+                        .padding(top = 40.dp), // Добавлен отступ сверху
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2F3E))
                 ) {
@@ -119,10 +125,12 @@ fun FilterDialog(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
 
-                        // Секция выбора команд
+                        // Секция выбора команд с поиском
                         TeamsSelectionSection(
                             teams = teams,
                             selectedTeams = selectedTeams,
+                            searchQuery = searchQuery,
+                            onSearchQueryChanged = { searchQuery = it },
                             onTeamSelectionChanged = { teamId, isSelected ->
                                 selectedTeams = if (isSelected) {
                                     selectedTeams + teamId
@@ -360,10 +368,13 @@ private fun getStartOfWeek(date: LocalDate): LocalDate {
         .with(fields.dayOfWeek(), 1)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TeamsSelectionSection(
     teams: List<TeamBasicInfo>,
     selectedTeams: List<String>,
+    searchQuery: String,
+    onSearchQueryChanged: (String) -> Unit,
     onTeamSelectionChanged: (String, Boolean) -> Unit,
     onSelectAll: () -> Unit
 ) {
@@ -401,6 +412,32 @@ private fun TeamsSelectionSection(
             }
         }
 
+        // Поле поиска
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = onSearchQueryChanged,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            placeholder = { Text("Поиск команд", color = Color.White.copy(alpha = 0.5f)) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Поиск",
+                    tint = Color.White.copy(alpha = 0.7f)
+                )
+            },
+//            colors = TextFieldDefaults.outlinedTextFieldColors(
+//                textColor = Color.White,
+//                cursorColor = Color(0xFF6C5CE7),
+//                focusedBorderColor = Color(0xFF6C5CE7),
+//                unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+//                containerColor = Color(0xFF1D1F2B)
+//            ),
+            shape = RoundedCornerShape(8.dp),
+            singleLine = true
+        )
+
         // Список команд, сгруппированных по дивизионам
         Box(
             modifier = Modifier
@@ -419,40 +456,60 @@ private fun TeamsSelectionSection(
                     )
                 }
             } else {
-                // Группируем команды по дивизионам
-                val teamsByDivision = teams.groupBy {
-                    it.division ?: "Без дивизиона"
+                // Фильтруем команды по поисковому запросу
+                val filteredTeams = if (searchQuery.isEmpty()) {
+                    teams
+                } else {
+                    teams.filter { it.name.contains(searchQuery, ignoreCase = true) }
                 }
 
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    teamsByDivision.forEach { (division, teamsInDivision) ->
-                        // Заголовок дивизиона
-                        item {
-                            Text(
-                                text = division,
-                                color = Color.White.copy(alpha = 0.7f),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
-                        }
+                if (filteredTeams.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Команды не найдены",
+                            color = Color.White.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    // Группируем команды по дивизионам
+                    val teamsByDivision = filteredTeams.groupBy {
+                        it.division ?: "Без дивизиона"
+                    }
 
-                        // Команды в дивизионе
-                        items(teamsInDivision) { team ->
-                            TeamRow(
-                                team = team,
-                                isSelected = selectedTeams.contains(team.id),
-                                onSelectionChanged = { isSelected ->
-                                    onTeamSelectionChanged(team.id, isSelected)
-                                }
-                            )
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        teamsByDivision.forEach { (division, teamsInDivision) ->
+                            // Заголовок дивизиона
+                            item {
+                                Text(
+                                    text = division,
+                                    color = Color.White.copy(alpha = 0.7f),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
 
-                            Divider(
-                                color = Color.Gray.copy(0.3f),
-                                modifier = Modifier.padding(vertical = 4.dp)
-                            )
+                            // Команды в дивизионе
+                            items(teamsInDivision) { team ->
+                                TeamRow(
+                                    team = team,
+                                    isSelected = selectedTeams.contains(team.id),
+                                    onSelectionChanged = { isSelected ->
+                                        onTeamSelectionChanged(team.id, isSelected)
+                                    }
+                                )
+
+                                Divider(
+                                    color = Color.Gray.copy(0.3f),
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                            }
                         }
                     }
                 }
