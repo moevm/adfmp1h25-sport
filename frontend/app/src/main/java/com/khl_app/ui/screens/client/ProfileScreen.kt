@@ -68,7 +68,6 @@ import com.khl_app.ui.screens.AboutPopUp
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextButton
@@ -200,28 +199,33 @@ fun ProfileScreen(
 @Composable
 fun TopBar(isFromMenu: Boolean, onMenuClick: () -> Unit, onBackClick: () -> Unit) {
     Spacer(modifier = Modifier.height(30.dp))
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 10.dp, vertical = 12.dp)
     ) {
-        if (isFromMenu) {
-            MenuButton(onMenuClick = onMenuClick, isFromMenu = isFromMenu)
-        } else {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Назад",
-                    tint = Color.White
-                )
+        // Левая часть (кнопка меню или назад)
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+        ) {
+            if (isFromMenu) {
+                MenuButton(onMenuClick = onMenuClick, isFromMenu = isFromMenu)
+            } else {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = Color.White
+                    )
+                }
             }
         }
 
+        // Центральная часть (Профиль)
         ProfileCenterContent(
             modifier = Modifier
-                .weight(1f)
+                .align(Alignment.Center)
                 .padding(horizontal = 20.dp)
         )
     }
@@ -240,13 +244,9 @@ private fun MenuButton(onMenuClick: () -> Unit, isFromMenu: Boolean) {
 
 @Composable
 fun ProfileCenterContent(modifier: Modifier = Modifier) {
-    val firstApiFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy")
-    val date = LocalDate.now().format(firstApiFormat)
-
-    Column(
+    Box(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = "Профиль",
@@ -353,7 +353,7 @@ fun ProfileContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         // Name with edit icon
         Row(
@@ -366,6 +366,8 @@ fun ProfileContent(
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Medium
             )
+
+            Spacer(modifier = Modifier.width(15.dp))
 
             if (isYou) {
                 IconButton(
@@ -380,6 +382,8 @@ fun ProfileContent(
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         // User ID with copy button
         Row(

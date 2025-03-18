@@ -15,6 +15,7 @@ import kotlinx.coroutines.withContext
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -39,6 +40,15 @@ class EventViewModel(
 
     private val _selectedTeams = MutableStateFlow<List<String>>(emptyList())
     val selectedTeams: StateFlow<List<String>> = _selectedTeams
+
+    private val _selectedDate = MutableStateFlow<LocalDate?>(null)
+    val selectedDate: StateFlow<LocalDate?> = _selectedDate
+
+    // Добавить метод для установки выбранной даты
+    fun setSelectedDate(date: LocalDate?) {
+        _selectedDate.value = date
+        Log.d("EventsViewModel", "Selected date set to: ${date ?: "null (today)"}")
+    }
 
     init {
         currentStartDate.add(Calendar.DAY_OF_MONTH, -10)
@@ -122,7 +132,8 @@ class EventViewModel(
                         token = token,
                         start = startTime,
                         end = endTime,
-                        teams = if (_selectedTeams.value.isEmpty()) null else _selectedTeams.value.joinToString(", ")
+                        teams = if (_selectedTeams.value.isEmpty()) null
+                        else _selectedTeams.value.map { it.toInt() }
                     )
 
                     Log.d("EventsViewModel", "Events API response code: ${response.code()}")
@@ -185,11 +196,6 @@ class EventViewModel(
         }
     }
 
-    // Добавляем метод для обновления данных с использованием всех параметров
-    suspend fun refreshEvents() {
-        Log.d("EventsViewModel", "Refreshing events with current filters")
-        loadEventsSequentially()
-    }
 
     suspend fun loadMorePastEventsSequentially(skipTeamsLoading: Boolean = true) {
         currentStartDate.add(Calendar.DAY_OF_MONTH, -10)
@@ -243,6 +249,16 @@ class EventViewModel(
         currentEndDate = Calendar.getInstance().apply {
             add(Calendar.DAY_OF_MONTH, 10)
         }
+
+        viewModelScope.launch {
+            loadEventsSequentially(skipTeamsLoading = true)
+        }
+    }
+
+    fun resetAndLoadEventsFromFilter() {
+        _events.value = emptyList()
+        _isLoading.value = true
+        _error.value = null
 
         viewModelScope.launch {
             loadEventsSequentially(skipTeamsLoading = true)

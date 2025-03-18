@@ -1,6 +1,7 @@
 import requests as requests
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
+import logging
 
 from endpoints.teams.service import get_events_service
 from services.get_env import KHL_URL
@@ -21,6 +22,8 @@ def get_events():
     start_time = request.args.get('start_time')
     end_time = request.args.get('end_time')
     teams = request.args.getlist('teams')
+    teams = [int(team) for team in teams]
+
 
     events = get_events_service(start_time, end_time, teams)
     if events is not None:

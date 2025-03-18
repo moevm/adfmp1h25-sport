@@ -32,7 +32,7 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Query("start_time") start: Long?,
         @Query("end_time") end: Long?,
-        @Query("teams") teams: String? // Изменили тип на String
+        @Query("teams") teams: List<Int>? // Изменили тип на List<Int>
     ): Response<List<EventWrapper>>
 
     @GET("followers/get_followers")

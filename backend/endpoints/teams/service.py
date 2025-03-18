@@ -19,7 +19,7 @@ def get_events_service(start_time, end_time, teams=None):
         if end_time:
             params.append(('q[start_at_lt_time_from_unixtime]', end_time))
         if teams:
-            teams = [int(x.strip()) for x in teams[0].split(',')]
+            # Предполагаем, что teams уже приходит как массив int
             for team in teams:
                 params.append(('q[team_a_or_team_b_in][]', team))
 

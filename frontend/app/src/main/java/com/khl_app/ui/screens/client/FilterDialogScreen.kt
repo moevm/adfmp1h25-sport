@@ -427,18 +427,10 @@ private fun TeamsSelectionSection(
                     tint = Color.White.copy(alpha = 0.7f)
                 )
             },
-//            colors = TextFieldDefaults.outlinedTextFieldColors(
-//                textColor = Color.White,
-//                cursorColor = Color(0xFF6C5CE7),
-//                focusedBorderColor = Color(0xFF6C5CE7),
-//                unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-//                containerColor = Color(0xFF1D1F2B)
-//            ),
             shape = RoundedCornerShape(8.dp),
             singleLine = true
         )
 
-        // Список команд, сгруппированных по дивизионам
         Box(
             modifier = Modifier
                 .fillMaxWidth()

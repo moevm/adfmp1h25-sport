@@ -113,7 +113,6 @@ fun MainScreen(
 
             Pair(isAtTop, isAtBottom)
         }
-            .debounce(1000L)
             .collect { (isAtTop, isAtBottom) ->
                 // Предотвращаем множественные запросы - загрузка только когда нет активной загрузки
                 if (!isLoading && loadingDirection == LoadDirection.NONE && events.isNotEmpty()) {
@@ -145,15 +144,21 @@ fun MainScreen(
 
     LaunchedEffect(events.isNotEmpty()) {
         if (events.isNotEmpty() && !isLoading) {
-            val today = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yy"))
-            val dateGroups = events.groupBy { it.date }.keys.toList().sortedByDescending { it }
-            val todayIndex = dateGroups.indexOf(today)
+            val selectedDate = viewModel.eventViewModel.selectedDate.first()
+            val targetDate = if (selectedDate != null) {
+                selectedDate.format(DateTimeFormatter.ofPattern("dd.MM.yy"))
+            } else {
+                LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yy"))
+            }
 
-            if (todayIndex >= 0) {
+            val dateGroups = events.groupBy { it.date }.keys.toList().sortedByDescending { it }
+            val targetDateIndex = dateGroups.indexOf(targetDate)
+
+            if (targetDateIndex >= 0) {
                 var position = 0
                 val groupedEvents = events.groupBy { it.date }.toList().sortedByDescending { it.first }.toMap()
 
-                for (i in 0 until todayIndex) {
+                for (i in 0 until targetDateIndex) {
                     position += 1 + (groupedEvents[dateGroups[i]]?.size ?: 0)
                 }
 
@@ -181,12 +186,6 @@ fun MainScreen(
                     navHostController.navigate(Screen.TrackableScreen.route)
                 }
             },
-            onFilterApplied = {
-                scope.launch {
-                    loadingDirection = LoadDirection.NONE
-                    viewModel.loadEvents()
-                }
-            },
             name = name,
             isFromMenu = isFromMenu
         )
@@ -194,7 +193,8 @@ fun MainScreen(
         NavigationButtons(
             events = events,
             listState = listState,
-            scope = scope
+            scope = scope,
+            mainViewModel = viewModel
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -312,9 +312,19 @@ enum class LoadDirection {
 fun NavigationButtons(
     events: List<EventPredictionItem>,
     listState: LazyListState,
-    scope: CoroutineScope
+    scope: CoroutineScope,
+    mainViewModel: MainViewModel // Добавим параметр, чтобы получить выбранную дату
 ) {
     val today = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yy"))
+
+    // Получаем выбранную дату из ViewModel
+    val selectedDate by mainViewModel.eventViewModel.selectedDate.collectAsState()
+
+    // Форматируем выбранную дату, если она не null
+    val selectedDateFormatted = selectedDate?.format(DateTimeFormatter.ofPattern("dd.MM.yy"))
+
+    // Используем выбранную дату или сегодняшнюю, если дата не выбрана
+    val targetDate = selectedDateFormatted ?: today
 
     val groupedEvents = events.groupBy { it.date }
         .toList()
@@ -323,18 +333,19 @@ fun NavigationButtons(
 
     val dateGroups = groupedEvents.keys.toList()
 
-    val todayIndex = dateGroups.indexOf(today)
+    // Ищем индекс целевой даты (выбранной или сегодняшней)
+    val targetDateIndex = dateGroups.indexOf(targetDate)
 
     fun findNearestFutureDate(): Int {
         if (dateGroups.isEmpty()) return -1
-        if (todayIndex <= 0) return dateGroups.size - 1
-        return todayIndex - 1
+        if (targetDateIndex <= 0) return dateGroups.size - 1
+        return targetDateIndex - 1
     }
 
     fun findNearestPastDate(): Int {
         if (dateGroups.isEmpty()) return -1
-        if (todayIndex < 0 || todayIndex >= dateGroups.size - 1) return 0
-        return todayIndex + 1
+        if (targetDateIndex < 0 || targetDateIndex >= dateGroups.size - 1) return 0
+        return targetDateIndex + 1
     }
 
     fun calculateScrollPosition(targetDateIndex: Int): Int {
@@ -399,8 +410,8 @@ fun NavigationButtons(
                 .clickable {
                     selectedTabIndex = 1
                     scope.launch {
-                        if (dateGroups.isNotEmpty() && todayIndex >= 0) {
-                            val position = calculateScrollPosition(todayIndex)
+                        if (dateGroups.isNotEmpty() && targetDateIndex >= 0) {
+                            val position = calculateScrollPosition(targetDateIndex)
                             listState.animateScrollToItem(position)
                         }
                     }
@@ -408,7 +419,8 @@ fun NavigationButtons(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Сегодня",
+                // Изменяем текст кнопки в зависимости от того, выбрана дата или нет
+                text = if (selectedDate != null) selectedDateFormatted!! else "Сегодня",
                 color = textColor,
                 fontSize = 14.sp,
                 fontWeight = if (selectedTabIndex == 1) FontWeight.Bold else FontWeight.Normal
@@ -448,7 +460,6 @@ fun NavigationButtons(
 fun TopBar(
     viewModel: MainViewModel,
     onMenuClick: () -> Unit,
-    onFilterApplied: () -> Unit,
     name: String?,
     isFromMenu: Boolean
 ) {
@@ -469,7 +480,6 @@ fun TopBar(
         )
         SettingsButton(
             mainViewModel = viewModel,
-            onFilterApplied = onFilterApplied
         )
     }
 }
@@ -522,12 +532,19 @@ private fun MenuButton(isFromMenu: Boolean, onMenuClick: () -> Unit) {
 @Composable
 fun SettingsButton(
     mainViewModel: MainViewModel,
-    onFilterApplied: () -> Unit
 ) {
     val showFilterDialog = remember { mutableStateOf(false) }
 
+    // Получаем текущую дату из ViewModel вместо создания новой
     val selectedDate = remember { mutableStateOf<LocalDate?>(null) }
     val selectedTeamIds = remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // Собираем текущее состояние из ViewModel при запуске
+    LaunchedEffect(Unit) {
+        mainViewModel.eventViewModel.selectedDate.collect { date ->
+            selectedDate.value = date
+        }
+    }
 
     val teamsMap by mainViewModel.teamViewModel.teamsMap.collectAsState()
 
@@ -559,20 +576,25 @@ fun SettingsButton(
             selectedDate.value = date
             selectedTeamIds.value = teamIds
 
+            // Сохраняем выбранную дату в ViewModel
+            mainViewModel.eventViewModel.setSelectedDate(date)
+
             if (date != null) {
                 val startCalendar = Calendar.getInstance().apply {
                     set(date.year, date.monthValue - 1, date.dayOfMonth, 0, 0, 0)
+                    add(Calendar.DAY_OF_MONTH, -10) // 10 дней до выбранной даты
                 }
                 val endCalendar = Calendar.getInstance().apply {
                     set(date.year, date.monthValue - 1, date.dayOfMonth, 23, 59, 59)
+                    add(Calendar.DAY_OF_MONTH, 10) // 10 дней после выбранной даты
                 }
                 mainViewModel.eventViewModel.setDateRange(startCalendar, endCalendar)
             } else {
                 val startDate = Calendar.getInstance().apply {
-                    add(Calendar.DAY_OF_MONTH, -3)
+                    add(Calendar.DAY_OF_MONTH, -10)
                 }
                 val endDate = Calendar.getInstance().apply {
-                    add(Calendar.DAY_OF_MONTH, 3)
+                    add(Calendar.DAY_OF_MONTH, 10)
                 }
                 mainViewModel.eventViewModel.setDateRange(startDate, endDate)
             }
@@ -581,7 +603,7 @@ fun SettingsButton(
 
             showFilterDialog.value = false
 
-            onFilterApplied()
+            mainViewModel.eventViewModel.resetAndLoadEventsFromFilter()
         }
     )
 }

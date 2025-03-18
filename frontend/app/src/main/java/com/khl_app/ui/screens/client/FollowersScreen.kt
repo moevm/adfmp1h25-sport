@@ -195,13 +195,13 @@ fun FollowersScreen(
                 )
             )
         },
-        containerColor = Color(0xFF282828)
+        containerColor = Color.Transparent
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFF282828))
+                .background(color = Color(0xFF2C2F3E))
         ) {
             when (uiState) {
                 is FollowersUiState.Loading -> {
@@ -286,7 +286,7 @@ fun FollowersScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0x80000000)),
+                        .background(color = Color(0xFF2C2F3E)),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = Color.White)
