@@ -28,6 +28,9 @@ class EventViewModel(
     private val _events = MutableStateFlow<List<EventPredictionItem>>(emptyList())
     val events: StateFlow<List<EventPredictionItem>> = _events
 
+    // Store the original, unfiltered events list
+    private val _allEvents = MutableStateFlow<List<EventPredictionItem>>(emptyList())
+
     private var currentStartDate = Calendar.getInstance()
     private var currentEndDate = Calendar.getInstance()
 
@@ -44,10 +47,33 @@ class EventViewModel(
     private val _selectedDate = MutableStateFlow<LocalDate?>(null)
     val selectedDate: StateFlow<LocalDate?> = _selectedDate
 
+    // New state for showing only matches with predictions
+    private val _showOnlyWithPredictions = MutableStateFlow<Boolean>(false)
+    val showOnlyWithPredictions: StateFlow<Boolean> = _showOnlyWithPredictions
+
     // Добавить метод для установки выбранной даты
     fun setSelectedDate(date: LocalDate?) {
         _selectedDate.value = date
         Log.d("EventsViewModel", "Selected date set to: ${date ?: "null (today)"}")
+        applyFilters()
+    }
+
+    // Add method to set showOnlyWithPredictions flag
+    fun setShowOnlyWithPredictions(show: Boolean) {
+        _showOnlyWithPredictions.value = show
+        Log.d("EventsViewModel", "Show only with predictions set to: $show")
+        applyFilters()
+    }
+
+    // Apply all filters to the events list
+    private fun applyFilters() {
+        val filteredEvents = _allEvents.value.filter { event ->
+            // Apply predictions filter if enabled
+            (!_showOnlyWithPredictions.value || event.prediction != null)
+        }
+
+        _events.value = filteredEvents
+        Log.d("EventsViewModel", "Applied filters. Events count: ${filteredEvents.size} (from ${_allEvents.value.size})")
     }
 
     init {
@@ -163,13 +189,15 @@ class EventViewModel(
 
                             Log.d("EventsViewModel", "Mapping events with predictions")
                             val mappedEvents = mapEventsToEventPredictionItems(eventsListRaw, teamsMap, predictionsMap)
-                            _events.value = mappedEvents
+                            _allEvents.value = mappedEvents  // Store all events
+                            applyFilters()  // Apply filters to update _events
                             _error.value = null
                         } catch (e: Exception) {
                             Log.e("EventsViewModel", "Error fetching predictions", e)
                             // Continue with empty predictions
                             val mappedEvents = mapEventsToEventPredictionItems(eventsListRaw, teamsMap, emptyMap())
-                            _events.value = mappedEvents
+                            _allEvents.value = mappedEvents  // Store all events
+                            applyFilters()  // Apply filters to update _events
                             _error.value = null
                         }
                     } else {
@@ -195,7 +223,6 @@ class EventViewModel(
             Log.d("EventsViewModel", "Finished loading events")
         }
     }
-
 
     suspend fun loadMorePastEventsSequentially(skipTeamsLoading: Boolean = true) {
         currentStartDate.add(Calendar.DAY_OF_MONTH, -10)
@@ -239,6 +266,7 @@ class EventViewModel(
     }
 
     fun resetAndLoadEvents() {
+        _allEvents.value = emptyList()
         _events.value = emptyList()
         _isLoading.value = true
         _error.value = null
@@ -256,6 +284,7 @@ class EventViewModel(
     }
 
     fun resetAndLoadEventsFromFilter() {
+        _allEvents.value = emptyList()
         _events.value = emptyList()
         _isLoading.value = true
         _error.value = null

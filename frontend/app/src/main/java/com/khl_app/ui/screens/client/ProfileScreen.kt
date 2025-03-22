@@ -442,7 +442,7 @@ fun ProfileContent(
             )
 
             StatItem(
-                value = "${(userData.stats.scorePoints.toFloat() / userData.stats.predictedGames.toFloat() * 100).toInt()}%",
+                value = "${(userData.stats.scorePoints.toFloat() / userData.stats.predictedGames.toFloat() / 3 * 100).toInt()}%",
                 label = "Верность счета"
             )
         }

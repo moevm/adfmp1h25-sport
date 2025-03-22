@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -34,6 +35,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
@@ -72,12 +75,14 @@ fun FilterDialog(
     teams: List<TeamBasicInfo>,
     initialSelectedDate: LocalDate? = null,
     initialSelectedTeams: List<String> = emptyList(),
+    initialShowOnlyWithPredictions: Boolean = false,
     onDismiss: () -> Unit,
-    onApply: (selectedDate: LocalDate?, selectedTeams: List<String>) -> Unit
+    onApply: (selectedDate: LocalDate?, selectedTeams: List<String>, showOnlyWithPredictions: Boolean) -> Unit
 ) {
     if (show) {
         var selectedDate by remember { mutableStateOf(initialSelectedDate) }
         var selectedTeams by remember { mutableStateOf(initialSelectedTeams) }
+        var showOnlyWithPredictions by remember { mutableStateOf(initialShowOnlyWithPredictions) }
         var currentWeek by remember { mutableStateOf(LocalDate.now()) }
         var searchQuery by remember { mutableStateOf("") }
 
@@ -107,7 +112,7 @@ fun FilterDialog(
                         // Панель заголовка с кнопками закрытия и применения
                         DialogHeader(
                             onClose = onDismiss,
-                            onApply = { onApply(selectedDate, selectedTeams) }
+                            onApply = { onApply(selectedDate, selectedTeams, showOnlyWithPredictions) }
                         )
 
                         // Календарь по неделям
@@ -118,6 +123,17 @@ fun FilterDialog(
                             onNextWeek = { currentWeek = currentWeek.plusWeeks(1) },
                             onDateSelected = { date -> selectedDate = date },
                             onDateDeselected = { selectedDate = null }
+                        )
+
+                        Divider(
+                            color = Color.Gray.copy(0.5f),
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+
+                        // Новый переключатель для фильтрации по предсказаниям
+                        PredictionsFilter(
+                            showOnlyWithPredictions = showOnlyWithPredictions,
+                            onToggleChange = { showOnlyWithPredictions = it }
                         )
 
                         Divider(
@@ -187,6 +203,38 @@ private fun DialogHeader(
                 tint = Color.White
             )
         }
+    }
+}
+
+@Composable
+private fun PredictionsFilter(
+    showOnlyWithPredictions: Boolean,
+    onToggleChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "Только с прогнозами",
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        Switch(
+            checked = showOnlyWithPredictions,
+            onCheckedChange = onToggleChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = Color(0xFF6C5CE7),
+                uncheckedThumbColor = Color.White,
+                uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
+            )
+        )
     }
 }
 

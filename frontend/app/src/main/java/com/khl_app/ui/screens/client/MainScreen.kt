@@ -566,18 +566,25 @@ fun SettingsButton(
         )
     }
 
+    val showOnlyWithPredictions = remember { mutableStateOf(false) }
+
     FilterDialog(
         show = showFilterDialog.value,
         teams = teamsForFilter,
         initialSelectedDate = selectedDate.value,
         initialSelectedTeams = selectedTeamIds.value,
+        initialShowOnlyWithPredictions = showOnlyWithPredictions.value, // Добавляем новый параметр
         onDismiss = { showFilterDialog.value = false },
-        onApply = { date, teamIds ->
+        onApply = { date, teamIds, showPredictionsOnly -> // Обновляем параметры обработчика
             selectedDate.value = date
             selectedTeamIds.value = teamIds
+            showOnlyWithPredictions.value = showPredictionsOnly // Сохраняем новое значение
 
             // Сохраняем выбранную дату в ViewModel
             mainViewModel.eventViewModel.setSelectedDate(date)
+
+            // Устанавливаем флаг отображения только с прогнозами
+            mainViewModel.eventViewModel.setShowOnlyWithPredictions(showPredictionsOnly)
 
             if (date != null) {
                 val startCalendar = Calendar.getInstance().apply {
