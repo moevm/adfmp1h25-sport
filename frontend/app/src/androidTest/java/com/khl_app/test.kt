@@ -4,72 +4,74 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.navigation.compose.ComposeNavigator
-import androidx.navigation.testing.TestNavHostController
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.test.filterToOne
-import androidx.compose.ui.test.hasAnyDescendant
-import androidx.compose.ui.test.hasParent
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithTag
 import com.khl_app.ui.MainActivity
-import com.khl_app.ui.navigation.AppNavGraph
-
+import org.junit.FixMethodOrder
+import org.junit.runners.MethodSorters
 
 @RunWith(AndroidJUnit4::class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class IntegrationsTest {
 
     @get:Rule
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun testAuthAndViewProfileAndFilter() {
-        composeTestRule.waitForIdle()
-        runBlocking {
-            delay(4000)
+    fun test1_Auth() {
+        composeTestRule.waitUntil(15000) {
+            try {
+                composeTestRule.onNodeWithText("Логин").isDisplayed()
+            } catch (e: Exception) {
+                false
+            }
         }
 
-        // 2. Вводим данные для авторизации
-        composeTestRule.onNodeWithText("Логин").assertIsDisplayed()
         composeTestRule.onNodeWithText("Логин").performTextInput("nick")
         composeTestRule.onNodeWithText("Пароль").performTextInput("13691303")
 
-        // 3. Нажимаем кнопку входа и ждем перехода на главный экран
         composeTestRule.onNodeWithText("Войти").performClick()
-        composeTestRule.waitForIdle()
 
-        runBlocking {
-            delay(7000)
+        composeTestRule.waitUntil(15000) {
+            try {
+                composeTestRule.onNodeWithText("Календарь").isDisplayed()
+            } catch (e: Exception) {
+                false
+            }
         }
 
         composeTestRule.onNodeWithText("Календарь").assertIsDisplayed()
+    }
+
+    @Test
+    fun test2_ViewProfile() {
+        composeTestRule.waitUntil(15000) {
+            try {
+                composeTestRule.onNodeWithText("Календарь").isDisplayed()
+            } catch (e: Exception) {
+                false
+            }
+        }
 
         composeTestRule.onNodeWithContentDescription("Menu Button").performClick()
-        composeTestRule.waitForIdle()
 
-        runBlocking {
-            delay(2000)
+        composeTestRule.waitUntil(5000) {
+            try {
+                composeTestRule.onNodeWithText("Профиль").isDisplayed()
+            } catch (e: Exception) {
+                false
+            }
         }
 
-        composeTestRule.onNodeWithText("Профиль").assertIsDisplayed()
         composeTestRule.onNodeWithText("Профиль").performClick()
-
-        runBlocking {
-            delay(10000)
-        }
-        composeTestRule.waitForIdle()
 
         composeTestRule.waitUntil(15000) {
             try {
@@ -81,39 +83,78 @@ class IntegrationsTest {
 
         composeTestRule.onNodeWithText("nick").assertIsDisplayed()
 
-        // Проверяем наличие других элементов профиля,
-        // которые должны появиться после полной загрузки данных
-        try {
-            composeTestRule.onNodeWithText("Баллов получено").assertIsDisplayed()
-            composeTestRule.onNodeWithText("Предсказано игр").assertIsDisplayed()
-        } catch (e: Exception) {
-            runBlocking { delay(5000) }
-            composeTestRule.waitForIdle()
-            composeTestRule.onNodeWithText("Баллов получено").assertIsDisplayed()
-            composeTestRule.onNodeWithText("Предсказано игр").assertIsDisplayed()
+        composeTestRule.waitUntil(10000) {
+            try {
+                composeTestRule.onNodeWithText("Баллов получено").isDisplayed() &&
+                        composeTestRule.onNodeWithText("Предсказано игр").isDisplayed()
+            } catch (e: Exception) {
+                false
+            }
         }
 
-        composeTestRule.onNodeWithContentDescription("Меню")
-            .performClick() // или ищите по тегу, если contentDescription отличается
+        composeTestRule.waitUntil(10000) {true}
+    }
 
-        if (!composeTestRule.onNodeWithContentDescription("Меню").isDisplayed()) {
-            composeTestRule.onNodeWithContentDescription("Menu").performClick()
+    @Test
+    fun test3_FilterAndPlaceBet() {
+        composeTestRule.waitUntil(15000) {
+            try {
+                composeTestRule.onNodeWithText("Календарь").isDisplayed()
+            } catch (e: Exception) {
+                false
+            }
         }
 
-        composeTestRule.waitForIdle()
+        if (!composeTestRule.onNodeWithText("Календарь").isDisplayed()) {
+            composeTestRule.onNodeWithContentDescription("Меню").performClick()
 
-        runBlocking {
-            delay(2000)
+            if (!composeTestRule.onNodeWithContentDescription("Меню").isDisplayed()) {
+                composeTestRule.onNodeWithContentDescription("Menu").performClick()
+            }
+
+            composeTestRule.waitUntil(5000) {
+                try {
+                    composeTestRule.onNodeWithText("Календарь").isDisplayed()
+                } catch (e: Exception) {
+                    false
+                }
+            }
+
+            composeTestRule.onNodeWithText("Календарь").performClick()
+
+            composeTestRule.waitUntil(10000) {
+                try {
+                    composeTestRule.onNodeWithText("Календарь").isDisplayed()
+                } catch (e: Exception) {
+                    false
+                }
+            }
         }
 
-        composeTestRule.onNodeWithText("Календарь").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Календарь").performClick()
+        composeTestRule.onNodeWithContentDescription("Настройки и фильтры").performClick()
 
-        runBlocking {
-            delay(5000)
+        composeTestRule.waitUntil(5000) {
+            try {
+                composeTestRule.onNodeWithText("Поиск команд").isDisplayed()
+            } catch (e: Exception) {
+                false
+            }
         }
 
-        // 10. Проверяем, что вернулись на экран календаря
+        composeTestRule.onNodeWithText("Поиск команд").performTextInput("Салават Юлаев")
+
+        composeTestRule.waitUntil(5000) {
+            try {
+                composeTestRule.onNode(hasTestTag("teamItem") and hasText("Салават Юлаев")).isDisplayed()
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        composeTestRule.onNode(hasTestTag("teamItem") and hasText("Салават Юлаев")).performClick()
+
+        composeTestRule.onNodeWithContentDescription("Применить").performClick()
+
         composeTestRule.waitUntil(10000) {
             try {
                 composeTestRule.onNodeWithText("Календарь").isDisplayed()
@@ -122,62 +163,41 @@ class IntegrationsTest {
             }
         }
 
-        // 11. Открываем фильтр (нажимаем на иконку шестеренки)
-        composeTestRule.onNodeWithContentDescription("Настройки и фильтры").performClick()
-
-        runBlocking {
-            delay(2000)
-        }
-
-        // 12. Ищем поле поиска и вводим "Салават Юлаева"
-        composeTestRule.onNodeWithText("Поиск команд").performTextInput("Салават Юлаев")
-
-        runBlocking {
-            delay(2000)
-        }
-
-        composeTestRule.onNode(hasTestTag("teamItem") and hasText("Салават Юлаев")).performClick()
-
-        runBlocking {
-            delay(1000)
-        }
-
-        // 14. Нажимаем на галочку, чтобы применить фильтр
-        composeTestRule.onNodeWithContentDescription("Применить").performClick()
-
-        // 15. Ждем применения фильтра и обновления списка событий
-        runBlocking {
-            delay(5000)
-        }
-
-        // 16. Проверяем, что фильтр применился и мы вернулись на экран календаря
-        composeTestRule.onNodeWithText("Календарь").assertIsDisplayed()
-
-
-        // После проверки, что фильтр применился и мы вернулись на экран календаря
-        composeTestRule.onNodeWithText("Календарь").assertIsDisplayed()
-
-        runBlocking {
-            delay(2000)  // Даем время для загрузки отфильтрованных матчей
+        composeTestRule.waitUntil(10000) {
+            try {
+                composeTestRule.onAllNodesWithText("Салават Юлаев").fetchSemanticsNodes().isNotEmpty()
+            } catch (e: Exception) {
+                false
+            }
         }
 
         composeTestRule.onAllNodesWithText("Салават Юлаев")
             .onFirst()
             .performClick()
 
-        runBlocking {
-            delay(2000)
+        composeTestRule.waitUntil(5000) {
+            try {
+                composeTestRule.onNode(hasTestTag("scoreInput_Сибирь")).isDisplayed() &&
+                        composeTestRule.onNode(hasTestTag("scoreInput_Салават Юлаев")).isDisplayed()
+            } catch (e: Exception) {
+                false
+            }
         }
 
         composeTestRule.onNode(hasTestTag("scoreInput_Сибирь")).performTextInput("1")
-
         composeTestRule.onNode(hasTestTag("scoreInput_Салават Юлаев")).performTextInput("3")
 
         composeTestRule.onNodeWithText("Сохранить").performClick()
 
-        runBlocking {
-            delay(5000)
+        composeTestRule.waitUntil(10000) {
+            try {
+                composeTestRule.onNodeWithText("Календарь").isDisplayed()
+            } catch (e: Exception) {
+                false
+            }
         }
+
+        composeTestRule.waitUntil(1000) {true}
 
         composeTestRule.onNodeWithText("Календарь").assertIsDisplayed()
     }
