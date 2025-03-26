@@ -17,7 +17,8 @@ fun NavGraphBuilder.authNavigation(navHostController: NavHostController, viewMod
             viewModel = viewModel,
             onLogin = {
                 navHostController.navigate(Screen.MainScreen.route) {
-                    popUpTo(Screen.LoginScreen.route) {
+                    launchSingleTop = true
+                    popUpTo(navHostController.graph.startDestinationId) {
                         inclusive = true
                     }
                 }

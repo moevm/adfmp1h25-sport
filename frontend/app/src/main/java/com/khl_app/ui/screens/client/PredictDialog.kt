@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -47,7 +48,9 @@ import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.khl_app.domain.ApiClient
 import com.khl_app.domain.models.EventPredictionItem
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun PredictDialog(
@@ -112,7 +115,7 @@ fun PredictDialog(
                     TeamScoreInput(
                         team = item.teamB,
                         score = scoreB,
-                        onScoreChange = { scoreB = it }
+                        onScoreChange = { scoreB = it },
                     )
                 }
 
@@ -156,11 +159,13 @@ fun PredictDialog(
                                         isLoading = false
 
                                         if (response.isSuccessful) {
-                                            Toast.makeText(
-                                                context,
-                                                "Прогноз успешно сохранен",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Прогноз успешно сохранен",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
                                             onPredictionMade()
                                             onDismiss()
                                         } else {
@@ -254,7 +259,8 @@ fun TeamScoreInput(
             },
             modifier = Modifier
                 .width(70.dp)
-                .height(56.dp),
+                .height(56.dp)
+                .testTag("scoreInput_${team.name}"), // Добавлен тестовый тег с именем команды
             textStyle = TextStyle(
                 textAlign = TextAlign.Center,
                 fontSize = 18.sp,

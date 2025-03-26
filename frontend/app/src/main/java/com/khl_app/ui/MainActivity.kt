@@ -21,7 +21,7 @@ import com.khl_app.ui.themes.KhlAppTheme
 class MainActivity : ComponentActivity() {
     private val tokenCache = TokenPreferenceRepository(this)
     private val teamCache = TeamPreferenceRepository(this)
-    private val viewModel by viewModels<MainViewModel> {
+    val viewModel by viewModels<MainViewModel> {
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return MainViewModel(applicationContext, tokenCache, teamCache) as T

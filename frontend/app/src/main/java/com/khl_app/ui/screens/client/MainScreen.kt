@@ -58,6 +58,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
@@ -274,12 +275,11 @@ fun MainScreen(
                     navHostController.navigate(Screen.TrackableScreen.route)
                 },
                 onProfile = {
-                    scope.launch {
-                        val tokenData = viewModel.tokenCache.getInfo().first() // Use first() to get single value
-                        navHostController.navigate(Screen.ProfileScreen.createRoute(
-                            userId = getUserIdFromToken(tokenData.accessToken), isYou = true// Using the imported function to get ID
-                        ))
+                    val userId = runBlocking {
+                        val tokenData = viewModel.tokenCache.getInfo().first()
+                        getUserIdFromToken(tokenData.accessToken)
                     }
+                    navHostController.navigate(Screen.ProfileScreen.createRoute(userId = userId, isYou = true))
                 },
                 onAbout = {
                     aboutState = true
